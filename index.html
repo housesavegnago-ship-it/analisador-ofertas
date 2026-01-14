@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analisador de Ofertas</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,7 +101,7 @@
 
         <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
             <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.6.1.0 (Correção Automática) - 2026</p>
+            <p class="mt-1">v.4.0.0 (Correção Automática) - 2026</p>
         </footer>
     </div>
 
@@ -173,7 +175,6 @@
             return cleaned.toLowerCase().split(' ').map(word => {
                 if (['e', 'de', 'da', 'do', 'dos', 'das', "d'", 'sem', 'osso', 'com'].includes(word.toLowerCase())) return word.toLowerCase();
                 if (word.replace(/['’‘`]/g, "'").toLowerCase().includes("d'oeste")) return "d'Oeste"; 
-                // Força a primeira letra maiúscula e o restante da palavra minúsculo (para palavras como KG, kg, Kg)
                 return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
             }).join(' ');
         }
@@ -206,27 +207,22 @@
                     if (['SBP', 'OFF', 'ON', '1L', '2L', '2,5L', '3L', '3,5L', '5L'].includes(corrected)) {
                         return corrected;
                     }
-                    // Força title case para palavras corrigidas se não forem siglas
-                    return corrected.charAt(0).toUpperCase() + corrected.slice(1).toLowerCase();
+                    if (match[0] === match[0].toUpperCase()) return corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    return corrected;
                 });
             });
             return text;
         }
 
-        // Função Reforçada para Capitalização de Descrição
         function capitalizeDescription(description) { 
             if (!description) return "";
-            // Divide por espaços, capitaliza cada palavra, exceto preposições
             return description.split(' ').map(word => {
-                // Lista de exceções que devem ficar minúsculas
                 if (['e', 'de', 'da', 'do', 'dos', 'das', 'com', 'sem', 'em', 'por', 'para'].includes(word.toLowerCase())) {
                     return word.toLowerCase();
                 }
-                // Palavras que devem ficar TUDO MAIÚSCULO
                 if (['SBP', 'OFF', 'ON', '1L', '2L', '3L', '5L'].includes(word.toUpperCase())) {
-                    return word.toUpperCase(); // Mantém como está no dicionário ou força UPPER
+                    return word.toUpperCase(); 
                 }
-                // Padrão: Primeira Maiúscula, resto minúscula
                 return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
             }).join(' ');
         }
