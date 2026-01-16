@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador de Ofertas v7.1.1</title>
+    <title>Analisador de Ofertas v7.2</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -81,7 +81,7 @@
 
         <main class="flex-grow">
             <div class="card p-6 md:p-8 mb-8">
-                <h1 class="text-2xl font-extrabold text-gray-900 text-center mb-2">Analisador de Ofertas v7.1</h1>
+                <h1 class="text-2xl font-extrabold text-gray-900 text-center mb-2">Analisador de Ofertas v7.2</h1>
                 <p class="text-center text-gray-500 mb-6">Auditoria Completa, Correção Automática e Sincronia de Redes</p>
                 
                 <textarea id="inputText" class="w-full h-60 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="Cole aqui o texto das ofertas..."></textarea>
@@ -106,7 +106,7 @@
 
         <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
             <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.7.1.1 (Cidades Atualizadas) - 2026</p>
+            <p class="mt-1">v.7.2.0 (Bugfix Botão Analisar) - 2026</p>
         </footer>
     </div>
 
@@ -190,10 +190,11 @@
             }).join(' ');
         }
 
-        // --- FUNÇÃO DE CORREÇÃO ---
+        // --- FUNÇÃO DE CORREÇÃO (ATUALIZADA) ---
         function autoCorrectText(text) {
             if (!text) return text;
 
+            // Regex segura para litros
             text = text.replace(/\b(\d+([.,]\d+)?)\s*l\b/gi, '$1L');
             text = text.replace(/\b1,5\s*-/g, '1,5L');
 
@@ -231,7 +232,7 @@
                 if (['e', 'de', 'da', 'do', 'dos', 'das', 'com', 'sem', 'em', 'por', 'para', 'ao'].includes(word.toLowerCase())) {
                     return word.toLowerCase();
                 }
-                if (['SBP', 'OFF', 'ON', 'M&Ms', '1L', '2L', '3L', '5L', '1,5L', '1.5L', '10L', '1,3L'].includes(word)) {
+                if (['SBP', 'OFF', 'ON', 'M&Ms', '1L', '2L', '3L', '5L', '10L', '1,5L', '1.5L', '1,3L'].includes(word)) {
                     return word; 
                 }
                 if (/\d/.test(word)) return word;
@@ -303,7 +304,6 @@
             
             block.products.forEach((product) => {
                 let normalPrice = product.priceNormal ? `R$ ${product.priceNormal}` : "";
-                
                 let specialPrice = "";
                 let specialLabel = "";
                 
@@ -324,24 +324,7 @@
                 let code = product.code && product.code !== '-' ? product.code.split('/')[0] : '';
                 let linkUrl = code ? (selectedOfferType === 'SAVEGNAGO' ? `https://www.savegnago.com.br/${code}` : '#') : '#';
                 
-                htmlOutput += `
-                <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 100px; text-align: center;">
-                        <a href="${linkUrl}" target="_blank" style="text-decoration:none;">
-                            <img src="https://placehold.co/100x100?text=IMG-${code}" alt="${product.description}" width="100" style="display:block; border:0;" />
-                        </a>
-                    </td>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd; vertical-align: middle;">
-                        <a href="${linkUrl}" target="_blank" style="text-decoration:none; color: #333;">
-                            <strong style="font-size: 14px;">${product.description}</strong>
-                        </a>
-                        ${product.extraInfo ? `<div style="font-size: 12px; color: #666;">${product.extraInfo}</div>` : ''}
-                    </td>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: middle;">
-                        ${normalPrice ? `<div style="font-size: 14px; color: #333;">${normalPrice}</div>` : ''}
-                        ${specialPrice ? `<div style="font-size: 16px; color: #d00; font-weight: bold;">${specialPrice} <span style="font-size:10px; font-weight:normal;">(${specialLabel})</span></div>` : ''}
-                    </td>
-                </tr>`;
+                htmlOutput += `<tr><td style="padding: 10px; border-bottom: 1px solid #ddd; width: 100px; text-align: center;"><a href="${linkUrl}" target="_blank" style="text-decoration:none;"><img src="https://placehold.co/100x100?text=IMG-${code}" alt="${product.description}" width="100" style="display:block; border:0;" /></a></td><td style="padding: 10px; border-bottom: 1px solid #ddd; vertical-align: middle;"><a href="${linkUrl}" target="_blank" style="text-decoration:none; color: #333;"><strong style="font-size: 14px;">${product.description}</strong></a>${product.extraInfo ? `<div style="font-size: 12px; color: #666;">${product.extraInfo}</div>` : ''}</td><td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: middle;">${normalPrice ? `<div style="font-size: 14px; color: #333;">${normalPrice}</div>` : ''}${specialPrice ? `<div style="font-size: 16px; color: #d00; font-weight: bold;">${specialPrice} <span style="font-size:10px; font-weight:normal;">(${specialLabel})</span></div>` : ''}</td></tr>`;
             });
 
             htmlOutput += `</table>`;
@@ -367,12 +350,8 @@
                     <a href="${fullUrl}" target="_blank" class="sku-link flex-grow text-center" title="Abrir produto ${code}" onclick="markLinkAsVisited(this)">
                         ${code} <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[0.6rem]"></i>
                     </a>
-                    <button onclick="copySimpleText('${code}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar código">
-                        <i class="fa-regular fa-file"></i>
-                    </button>
-                    <button onclick="copyLinkUrl('${fullUrl}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar Link">
-                        <i class="fa-solid fa-link"></i>
-                    </button>
+                    <button onclick="copySimpleText('${code}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar código"><i class="fa-regular fa-file"></i></button>
+                    <button onclick="copyLinkUrl('${fullUrl}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar Link"><i class="fa-solid fa-link"></i></button>
                 </div>`;
             }).join('');
         }
@@ -516,122 +495,10 @@
             resultsContainer.appendChild(blockContainer);
         }
 
-        function toggleRowCompletion(checkbox) {
-            const row = checkbox.closest('tr');
-            if (checkbox.checked) row.classList.add('row-completed'); else row.classList.remove('row-completed');
-        }
-
-        function reorderAllTables() {
-            const table0 = document.getElementById('table-0');
-            if (!table0) return;
-            const rows0 = Array.from(table0.querySelectorAll('tbody tr'));
-            const orderMap = {};
-            rows0.forEach(row => {
-                const input = row.querySelector('.order-input');
-                const key = row.dataset.key;
-                if (input && input.value !== '') orderMap[key] = parseInt(input.value); else orderMap[key] = 999999;
-            });
-            window.globalParsedBlocks.forEach((block) => {
-                block.products.sort((a, b) => {
-                    const keyA = (a.code || a.description).replace(/"/g, '&quot;');
-                    const keyB = (b.code || b.description).replace(/"/g, '&quot;');
-                    const orderA = orderMap.hasOwnProperty(keyA) ? orderMap[keyA] : 999999;
-                    const orderB = orderMap.hasOwnProperty(keyB) ? orderMap[keyB] : 999999;
-                    if (orderA !== orderB) return orderA - orderB;
-                    return a.description.localeCompare(b.description);
-                });
-            });
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = '';
-            window.globalParsedBlocks.forEach((block, index) => {
-                renderResultsTable(block.products, container, block.locationTitle, block.cityList, index);
-            });
-            const newRows0 = document.getElementById('table-0').querySelectorAll('tbody tr');
-            newRows0.forEach(row => {
-                const key = row.dataset.key;
-                if (orderMap[key] !== 999999) row.querySelector('.order-input').value = orderMap[key];
-            });
-            showToast("Todas as listas foram reordenadas!");
-        }
-
-        function parseProductBlock(lines) {
-            const products = [];
-            let i = 0;
-            while (i < lines.length) {
-                const currentLine = lines[i];
-                let productMatch = currentLine.match(/(.+) [-–—] R\$ ([\d,.]+)/);
-                let priceNormal = null;
-                let description = "";
-                let code = "";
-
-                if (productMatch) {
-                    const rawDescription = productMatch[1].trim();
-                    priceNormal = productMatch[2];
-                    const codeMatch = rawDescription.match(/\(red\.\s*([\d\/]+)\s*\)/);
-                    code = codeMatch ? codeMatch[1].trim() : '';
-                    let cleanDescription = codeMatch ? rawDescription.replace(codeMatch[0], '').trim() : rawDescription;
-                    description = cleanDescription.replace(/^\d+\)\s*/, '');
-                } else {
-                    if (!currentLine.startsWith('(') && i + 1 < lines.length) {
-                        const nextLine = lines[i+1];
-                        if (nextLine.match(/R\$/)) {
-                            const rawDescription = currentLine.trim();
-                            const codeMatch = rawDescription.match(/\(red\.\s*([\d\/]+)\s*\)/);
-                            code = codeMatch ? codeMatch[1].trim() : '';
-                            let cleanDescription = codeMatch ? rawDescription.replace(codeMatch[0], '').trim() : rawDescription;
-                            description = cleanDescription.replace(/^\d+\)\s*/, '');
-                            priceNormal = null; 
-                        } else { i++; continue; }
-                    } else { i++; continue; }
-                }
-
-                // APLICAÇÃO DA CORREÇÃO DE TEXTO AVANÇADA
-                const product = { code: code, description: capitalizeDescription(autoCorrectText(description)), priceNormal: priceNormal, priceNossoCartao: null, priceSaveGanhe: null, priceClienteCampeao: null, priceNaEmbalagem: null, priceNestaUnidade: null, extraInfo: null };
-                
-                let nextLineIndex = i + 1;
-                while (nextLineIndex < lines.length) {
-                    const nextLine = lines[nextLineIndex];
-                    const nextLineUpper = nextLine.toUpperCase();
-                    let matchedSomething = false;
-
-                    if (nextLineUpper.includes('NOSSO CARTÃO') || nextLineUpper.includes('NOSSO CARTAO')) {
-                        const priceMatch = nextLine.match(/R\$\s*([\d,.]+)/i);
-                        product.priceNossoCartao = priceMatch ? priceMatch[1] : 'INFO_MISSING';
-                        matchedSomething = true;
-                    }
-                    else if (nextLineUpper.includes('SAVE GANHE')) {
-                        const priceMatch = nextLine.match(/R\$\s*([\d,.]+)/i);
-                        product.priceSaveGanhe = priceMatch ? priceMatch[1] : 'INFO_MISSING';
-                        matchedSomething = true;
-                    }
-                    else if (nextLineUpper.includes('CLIENTE CAMPEÃO') || nextLineUpper.includes('CLIENTE CAMPEAO')) {
-                        const priceMatch = nextLine.match(/R\$\s*([\d,.]+)/i);
-                        product.priceClienteCampeao = priceMatch ? priceMatch[1] : 'INFO_MISSING';
-                        matchedSomething = true;
-                    }
-                    else {
-                        const naEmbalagemMatch = nextLine.match(/\((Nesta (?:embalagem|caixa).+?) – R\$ ([\d,.]+)\)/i);
-                        if (naEmbalagemMatch) { product.priceNaEmbalagem = naEmbalagemMatch[2]; matchedSomething = true; }
-                        const levandoMatch = nextLine.match(/(\((?:A partir de|Levando) \d+ unidades, pague R\$ ([\d,.]+) cada\))/i);
-                        if (levandoMatch) { product.priceNestaUnidade = levandoMatch[2]; matchedSomething = true; }
-                    }
-
-                    if (!matchedSomething) {
-                        if (nextLine.match(/(.+) [-–—] R\$ ([\d,.]+)/) || (!nextLine.startsWith('(') && lines[nextLineIndex+1] && lines[nextLineIndex+1].match(/R\$/))) { break; }
-                        const extraInfoMatch = nextLine.match(/^\((.+)\)$/);
-                        if (extraInfoMatch) { product.extraInfo = autoCorrectText(extraInfoMatch[1]); matchedSomething = true; }
-                    }
-                    if (matchedSomething) nextLineIndex++; else break;
-                }
-                i = nextLineIndex - 1; products.push(product);
-                i++;
-            }
-            return products;
-        }
-
         document.getElementById('selectSavegnago').addEventListener('click', () => { selectedOfferType = 'SAVEGNAGO'; MASTER_CITIES = CITIES_SAVEGNAGO; document.getElementById('parseButton').className = "btn btn-savegnago w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://savegnagoio.vtexassets.com/assets/vtex/assets-builder/savegnagoio.store-theme/14.0.36/home/logo-save___ee8753fa9fd1e21018b817a0d020549f.png"; toggleModal('listTypeModal', false); });
         document.getElementById('selectPaulistao').addEventListener('click', () => { selectedOfferType = 'PAULISTAO'; MASTER_CITIES = CITIES_PAULISTAO; document.getElementById('parseButton').className = "btn btn-paulistao w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://paulistaoatacadista.vtexassets.com/assets/vtex.file-manager-graphql/images/91d1697e-7efa-471e-b763-68b8b71430b2___db630f93263bf9ecc924c4493e2279f9.png"; toggleModal('listTypeModal', false); });
 
+        // LISTENER DO BOTÃO ANALISAR (COM PROTEÇÃO)
         document.getElementById('parseButton').addEventListener('click', async () => {
             const btn = document.getElementById('parseButton');
             const spinner = document.getElementById('loadingSpinner');
@@ -639,35 +506,48 @@
             const container = document.getElementById('resultsContainer');
             if (!text.trim()) { showToast("Cole um texto primeiro!", "error"); return; }
             if (!selectedOfferType) { toggleModal('listTypeModal', true); return; }
-            btn.disabled = true; spinner.classList.remove('hidden'); container.innerHTML = ''; window.globalParsedBlocks = [];
-            await new Promise(r => setTimeout(r, 500)); 
-            const rawBlocks = text.trim().split(/\n\s*\n\s*/);
-            rawBlocks.forEach((blockStr, index) => {
-                const rawLines = blockStr.trim().split('\n');
-                if (rawLines.length === 0) return;
-                let headerLines = [], productLines = [], foundProduct = false;
-                const productRegex = /.+[-–—] R\$\s*[\d,.]+/;
-                for (let line of rawLines) {
-                    const trimmed = line.trim();
-                    if (!trimmed) continue;
-                    if (!foundProduct) { if (productRegex.test(trimmed)) { foundProduct = true; productLines.push(trimmed); } else { headerLines.push(trimmed); } } else { productLines.push(trimmed); }
-                }
-                if (productLines.length === 0) return;
-                const fullHeader = headerLines.join(' ');
-                const products = parseProductBlock(productLines);
-                window.globalParsedBlocks.push({ header: fullHeader, locationTitle: fullHeader.split(/[-–—:]/)[0].trim(), cityList: [], products: products });
-            });
-            if (window.globalParsedBlocks.length > 0) parseCities(window.globalParsedBlocks);
-            window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); });
-            spinner.classList.add('hidden'); btn.disabled = false; showToast("Análise concluída!");
+            
+            try {
+                btn.disabled = true; 
+                spinner.classList.remove('hidden'); 
+                container.innerHTML = ''; 
+                window.globalParsedBlocks = [];
+                await new Promise(r => setTimeout(r, 500)); // Pequeno delay visual
+                
+                const rawBlocks = text.trim().split(/\n\s*\n\s*/);
+                rawBlocks.forEach((blockStr, index) => {
+                    const rawLines = blockStr.trim().split('\n');
+                    if (rawLines.length === 0) return;
+                    let headerLines = [], productLines = [], foundProduct = false;
+                    // Regex mais flexível para o traço
+                    const productRegex = /.+[-–—]\s*R\$\s*[\d,.]+/;
+                    for (let line of rawLines) {
+                        const trimmed = line.trim();
+                        if (!trimmed) continue;
+                        if (!foundProduct) { if (productRegex.test(trimmed)) { foundProduct = true; productLines.push(trimmed); } else { headerLines.push(trimmed); } } else { productLines.push(trimmed); }
+                    }
+                    if (productLines.length === 0) return;
+                    const fullHeader = headerLines.join(' ');
+                    const products = parseProductBlock(productLines);
+                    window.globalParsedBlocks.push({ header: fullHeader, locationTitle: fullHeader.split(/[-–—:]/)[0].trim(), cityList: [], products: products });
+                });
+                if (window.globalParsedBlocks.length > 0) parseCities(window.globalParsedBlocks);
+                window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); });
+                showToast("Análise concluída!");
+            } catch (error) {
+                console.error(error);
+                showToast("Erro ao analisar! Verifique o texto.", "error");
+            } finally {
+                spinner.classList.add('hidden'); 
+                btn.disabled = false; 
+            }
         });
 
-        // BOTÃO LIMPAR - ATUALIZADO (Limpa apenas o DOM, não reseta a loja)
+        // BOTÃO LIMPAR
         document.getElementById('clearButton').addEventListener('click', () => { 
             document.getElementById('inputText').value = ''; 
             document.getElementById('resultsContainer').innerHTML = ''; 
             window.globalParsedBlocks = []; 
-            // toggleModal('listTypeModal', true); // REMOVIDO PARA EVITAR O "BUG"
             showToast("Campos limpos!");
         });
 
