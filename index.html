@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador de Ofertas v7.5</title>
+    <title>Analisador de Ofertas v7.6</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -81,8 +81,8 @@
 
         <main class="flex-grow">
             <div class="card p-6 md:p-8 mb-8">
-                <h1 class="text-2xl font-extrabold text-gray-900 text-center mb-2">Analisador de Ofertas v7.5</h1>
-                <p class="text-center text-gray-500 mb-6">Auditoria Completa, Correção Automática e Sincronia de Redes</p>
+                <h1 class="text-2xl font-extrabold text-gray-900 text-center mb-2">Analisador de Ofertas v7.6</h1>
+                <p class="text-center text-gray-500 mb-6">Auditoria Completa com Auto-Reparo de Texto Quebrado</p>
                 
                 <textarea id="inputText" class="w-full h-60 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="Cole aqui o texto das ofertas..."></textarea>
                 
@@ -106,7 +106,7 @@
 
         <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
             <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.7.5.0 (Correção de Dicionário) - 2026</p>
+            <p class="mt-1">v.7.6.0 (Auto-Reparo de Texto) - 2026</p>
         </footer>
     </div>
 
@@ -190,29 +190,26 @@
             }).join(' ');
         }
 
-        // --- FUNÇÃO DE CORREÇÃO (CORRIGIDA) ---
+        // --- FUNÇÃO DE CORREÇÃO ---
         function autoCorrectText(text) {
             if (!text) return text;
 
-            // 1. Correções Manuais (casos que quebram regex)
-            text = text.replace(/\b1,5\s*-/g, '1,5L');
-            text = text.replace(/contra-filé/gi, 'Contrafilé');
-            text = text.replace(/contra filé/gi, 'Contrafilé');
-
-            // 2. Regex segura para litros
             text = text.replace(/\b(\d+([.,]\d+)?)\s*l\b/gi, '$1L');
+            text = text.replace(/\b1,5\s*-/g, '1,5L');
 
-            // 3. Dicionário Simplificado (Apenas palavras simples para evitar erro no RegExp)
             const dictionary = {
                 'muçarela': 'Mussarela',
                 'mussarela': 'Mussarela',
                 'pateko': 'Patéko',
+                'contra filé': 'Contrafilé',
+                'contra-filé': 'Contrafilé',
                 'contrafilé': 'Contrafilé',
                 'pêra': 'Pera',
                 'pera': 'Pera',
                 'tub': 'Tubo',
                 'tubo': 'Tubo',
                 'mms': 'M&Ms',
+                'm&m': 'M&Ms',
                 'm&ms': 'M&Ms',
                 'kilo': 'kg',
                 'sbp': 'SBP',
@@ -224,9 +221,6 @@
                 const regex = new RegExp(`\\b${key}\\b`, 'gi');
                 text = text.replace(regex, dictionary[key]);
             });
-
-            // Correção Manual para M&M (caracter especial)
-            text = text.replace(/\bm&m\b/gi, 'M&Ms');
 
             return text;
         }
@@ -408,12 +402,11 @@
                 const descId = `desc-${blockIndex}-${idx}`;
                 const extraId = `extra-${blockIndex}-${idx}`;
                 const rowClass = (visibleRowsCount % 2 === 0) ? 'bg-white' : 'bg-gray-50';
-                // PROTEÇÃO CONTRA NULL
-                const rawKey = product.code || product.description || `item-${idx}`;
+                const rawKey = product.code || product.description;
                 const safeKey = rawKey.replace(/"/g, '&quot;'); 
 
                 let showRow = true;
-                let descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}">${product.description || ''}</span><i class="fa-regular fa-copy text-gray-300"></i></div>`;
+                let descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}">${product.description}</span><i class="fa-regular fa-copy text-gray-300"></i></div>`;
                 
                 let normalPriceContent = product.priceNormal ? formatPrice(product.priceNormal) : '<span class="text-[10px] text-gray-500 italic leading-tight block">Sem preço<br>informado</span>';
                 
@@ -483,7 +476,7 @@
                         <td class="px-4 py-4 text-center"><input type="checkbox" class="w-5 h-5 text-green-600 rounded focus:ring-green-500 cursor-pointer" onchange="toggleRowCompletion(this)"></td>
                         <td class="px-4 py-4 text-center">${orderCell}</td>
                         <td class="px-4 py-4 whitespace-nowrap">${generateSkuLinks(product.code)}</td>
-                        <td class="px-4 py-4 text-sm font-medium text-gray-900 cursor-pointer" onclick="copyAndAnimate('${(product.description || '').replace(/'/g, "\\'")}', '${descId}')">${descContent}</td>
+                        <td class="px-4 py-4 text-sm font-medium text-gray-900 cursor-pointer" onclick="copyAndAnimate('${product.description.replace(/'/g, "\\'")}', '${descId}')">${descContent}</td>
                         <td class="px-4 py-4 text-center text-gray-800 font-semibold">${normalPriceContent}</td>
                         <td class="px-4 py-4 text-center font-bold ${cellClassCard}">${cardPriceContent}</td>
                         <td class="px-4 py-4 text-center font-bold ${cellClassSpecial}">${specialPriceContent}</td>
@@ -503,7 +496,40 @@
         document.getElementById('selectSavegnago').addEventListener('click', () => { selectedOfferType = 'SAVEGNAGO'; MASTER_CITIES = CITIES_SAVEGNAGO; document.getElementById('parseButton').className = "btn btn-savegnago w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://savegnagoio.vtexassets.com/assets/vtex/assets-builder/savegnagoio.store-theme/14.0.36/home/logo-save___ee8753fa9fd1e21018b817a0d020549f.png"; toggleModal('listTypeModal', false); });
         document.getElementById('selectPaulistao').addEventListener('click', () => { selectedOfferType = 'PAULISTAO'; MASTER_CITIES = CITIES_PAULISTAO; document.getElementById('parseButton').className = "btn btn-paulistao w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://paulistaoatacadista.vtexassets.com/assets/vtex.file-manager-graphql/images/91d1697e-7efa-471e-b763-68b8b71430b2___db630f93263bf9ecc924c4493e2279f9.png"; toggleModal('listTypeModal', false); });
 
-        // LISTENER DO BOTÃO ANALISAR (COM PROTEÇÃO)
+        // --- PRÉ-PROCESSAMENTO: CORRIGIR LINHAS QUEBRADAS ---
+        function preprocessText(text) {
+            // Remove caracteres invisíveis ruins
+            let clean = text.replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ').replace(/\t/g, ' ');
+            
+            const lines = clean.split('\n');
+            const processedLines = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                let current = lines[i].trim();
+                if (!current) continue;
+
+                // DETECÇÃO DE LINHA QUEBRADA (Continuação da anterior)
+                // Exemplos:
+                // 1. Começa com traço e preço: "- R$ 10,00"
+                // 2. É apenas um preço que fecha parenteses: "2,85)" (Caso do "Pagando com...")
+                // 3. É continuação de "válidas para..."
+                
+                const startsWithDashPrice = /^[-–—]\s*R\$/i.test(current);
+                const startsWithPriceOnly = /^R\$/i.test(current);
+                const isOrphanPriceSuffix = /^\d+,\d+\)$/.test(current); // Ex: "2,85)"
+                
+                if ((startsWithDashPrice || startsWithPriceOnly || isOrphanPriceSuffix) && processedLines.length > 0) {
+                    // Pega a linha anterior e cola a atual nela
+                    let prev = processedLines.pop();
+                    processedLines.push(prev + " " + current);
+                } else {
+                    processedLines.push(current);
+                }
+            }
+            return processedLines;
+        }
+
+        // --- LISTENER ANALISAR ATUALIZADO ---
         document.getElementById('parseButton').addEventListener('click', async () => {
             const btn = document.getElementById('parseButton');
             const spinner = document.getElementById('loadingSpinner');
@@ -519,35 +545,70 @@
                 window.globalParsedBlocks = [];
                 await new Promise(r => setTimeout(r, 500)); 
                 
-                const rawBlocks = text.trim().split(/\n\s*\n\s*/);
-                rawBlocks.forEach((blockStr, index) => {
-                    const rawLines = blockStr.trim().split('\n');
-                    if (rawLines.length === 0) return;
-                    let headerLines = [], productLines = [], foundProduct = false;
-                    const productRegex = /.+?[\s-–—:]*R\$\s*[\d,.]+/i;
-                    for (let line of rawLines) {
-                        const trimmed = line.trim();
-                        if (!trimmed) continue;
-                        if (!foundProduct) { if (productRegex.test(trimmed)) { foundProduct = true; productLines.push(trimmed); } else { headerLines.push(trimmed); } } else { productLines.push(trimmed); }
+                // 1. LIMPA E CONSERTA LINHAS QUEBRADAS
+                const fixedLines = preprocessText(text);
+                
+                // 2. RECONSTRÓI BLOCOS
+                // Como as linhas agora estão "sãs", podemos agrupar por blocos de cidades (linhas em branco separando)
+                // Mas o preprocessText removeu linhas em branco. Vamos usar uma lógica de detecção de cabeçalho.
+                
+                let currentBlockLines = [];
+                let isFirstBlock = true;
+
+                fixedLines.forEach((line) => {
+                    // Se a linha parece um cabeçalho de cidade (Tem cidade em MAIÚSCULO e "Ofertas válidas")
+                    const isHeader = /[A-ZÁÉÍÓÚÂÊÔÃÕÇ\s,]+[-–—]\s*Ofertas válidas/i.test(line);
+                    
+                    if (isHeader) {
+                        if (currentBlockLines.length > 0) {
+                            processBlock(currentBlockLines, isFirstBlock);
+                            isFirstBlock = false;
+                        }
+                        currentBlockLines = [line]; // Começa novo bloco com o cabeçalho
+                    } else {
+                        currentBlockLines.push(line);
                     }
-                    if (productLines.length === 0) return;
-                    const fullHeader = headerLines.join(' ');
-                    const products = parseProductBlock(productLines);
-                    window.globalParsedBlocks.push({ header: fullHeader, locationTitle: fullHeader.split(/[-–—:]/)[0].trim(), cityList: [], products: products });
                 });
+                
+                // Processa o último bloco
+                if (currentBlockLines.length > 0) {
+                    processBlock(currentBlockLines, isFirstBlock);
+                }
+
+                function processBlock(lines, isFirst) {
+                    // A primeira linha geralmente é o cabeçalho
+                    const header = lines[0]; 
+                    // O resto são produtos
+                    const productLines = lines.slice(1);
+                    
+                    // Se for o primeiro bloco e não tiver cabeçalho explícito de cidade, assume GERAL
+                    // Mas nosso preprocess juntou tudo. Vamos checar se a primeira linha tem "Ofertas válidas"
+                    let locationTitle = "LISTA GERAL";
+                    if (header.toUpperCase().includes("OFERTAS VÁLIDAS")) {
+                       locationTitle = header.split(/[-–—:]/)[0].trim();
+                    } else {
+                        // Se não tem cabeçalho, tudo é produto (caso do primeiro bloco sem cidade)
+                        // Reinjeta a primeira linha como produto
+                       productLines.unshift(header); 
+                    }
+
+                    const products = parseProductBlock(productLines);
+                    window.globalParsedBlocks.push({ header: header, locationTitle: locationTitle, cityList: [], products: products });
+                }
+
                 if (window.globalParsedBlocks.length > 0) parseCities(window.globalParsedBlocks);
                 window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); });
                 showToast("Análise concluída!");
             } catch (error) {
                 console.error(error);
-                showToast("Erro ao analisar! Verifique o texto.", "error");
+                showToast("Erro crítico. Verifique o console.", "error");
             } finally {
                 spinner.classList.add('hidden'); 
                 btn.disabled = false; 
             }
         });
 
-        // PARSER DE PRODUTOS FLEXÍVEL
+        // PARSER BLINDADO
         function parseProductBlock(lines) {
             const products = [];
             let currentProduct = null;
@@ -557,14 +618,10 @@
                 if (!line) continue;
 
                 const mainProductMatch = line.match(/^(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
-                
-                const isSpecialPrice = line.startsWith('(') || 
-                                     /Nosso Cartão|Save Ganhe|Cliente Campeão/i.test(line);
+                const isSpecialPrice = line.startsWith('(') || /Nosso Cartão|Save Ganhe|Cliente Campeão/i.test(line);
 
                 if (mainProductMatch && !isSpecialPrice) {
-                    if (currentProduct) {
-                        products.push(currentProduct);
-                    }
+                    if (currentProduct) products.push(currentProduct);
 
                     const rawDesc = mainProductMatch[1].trim();
                     const price = mainProductMatch[2].trim();
@@ -598,27 +655,21 @@
                     } else {
                         const embMatch = line.match(/\((Nesta (?:embalagem|caixa).+?) – R\$ ([\d,.]+)\)/i);
                         const levMatch = line.match(/(\((?:A partir de|Levando) \d+ unidades, pague R\$ ([\d,.]+) cada\))/i);
-                        
                         if (embMatch) {
                             currentProduct.priceNaEmbalagem = embMatch[2];
                         } else if (levMatch) {
                             currentProduct.priceNestaUnidade = levMatch[2];
                         } else {
                             const infoMatch = line.match(/^\((.+)\)$/);
-                            if (infoMatch) {
-                                currentProduct.extraInfo = autoCorrectText(infoMatch[1]);
-                            }
+                            if (infoMatch) currentProduct.extraInfo = autoCorrectText(infoMatch[1]);
                         }
                     }
                 }
             }
-            if (currentProduct) {
-                products.push(currentProduct);
-            }
+            if (currentProduct) products.push(currentProduct);
             return products;
         }
 
-        // BOTÃO LIMPAR - ATUALIZADO
         document.getElementById('clearButton').addEventListener('click', () => { 
             document.getElementById('inputText').value = ''; 
             document.getElementById('resultsContainer').innerHTML = ''; 
