@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador de Ofertas v8.1 (Fixed)</title>
+    <title>Analisador de Ofertas v8.2</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <style>
         :root { --cor-primaria: #ef4444; --cor-secundaria: #3b82f6; --cor-fundo: #f8fafc; --cor-texto-principal: #1f2937; --cor-borda: #e5e7eb; }
         body { font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-principal); }
@@ -25,7 +26,6 @@
         .btn-warning { background-color: #f59e0b; color: #fff; } .btn-warning:hover { background-color: #d97706; }
         .btn-timer { background-color: #8b5cf6; color: #fff; } .btn-timer:hover { background-color: #7c3aed; }
         .btn-timer-active { background-color: #f97316; color: #fff; } .btn-timer-active:hover { background-color: #ea580c; }
-        .btn-html { background-color: #0ea5e9; color: #fff; } .btn-html:hover { background-color: #0284c7; }
         .btn-excel { background-color: #16a34a; color: #fff; }
         .modal-overlay { position: fixed; inset: 0; background-color: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         .modal-overlay.visible { opacity: 1; pointer-events: auto; }
@@ -77,15 +77,14 @@
 
         <main class="flex-grow">
             <div class="card p-6 md:p-8 mb-8">
-                <h1 class="text-2xl font-extrabold text-gray-900 text-center mb-2">Analisador de Ofertas v8.1</h1>
-                <p class="text-center text-gray-500 mb-6">Correção Total: Layout, Botões e Texto Quebrado</p>
+                <h1 class="text-2xl font-extrabold text-gray-900 text-center mb-2">Analisador de Ofertas v8.2</h1>
+                <p class="text-center text-gray-500 mb-6">Auditoria Completa, Correção Automática e Sincronia de Redes</p>
                 
                 <textarea id="inputText" class="w-full h-60 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="Cole aqui o texto das ofertas..."></textarea>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                     <button id="parseButton" class="btn btn-neutral hover:bg-gray-300"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="buttonText">Analisar</span><div id="loadingSpinner" class="spinner hidden"></div></button>
                     <button id="timerButton" class="btn btn-timer"><i class="fa-solid fa-stopwatch"></i><span id="timerButtonText">Timer</span></button>
-                    <button onclick="generateSalesforceHTML(0)" class="btn btn-html"><i class="fa-solid fa-code"></i> HTML</button>
                     <button id="clearButton" class="btn btn-neutral"><i class="fa-solid fa-trash-can"></i> Limpar</button>
                 </div>
 
@@ -102,12 +101,11 @@
 
         <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
             <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.8.1.0 (Versão Estável) - 2026</p>
+            <p class="mt-1">v.8.2.0 (Interface Limpa) - 2026</p>
         </footer>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO ---
         const CITIES_SAVEGNAGO = [
             "Americana", "Araraquara", "Araras", "Barretos", "Bebedouro", "Campinas", "Franca", 
             "Hortolândia", "Indaiatuba", "Jaboticabal", "Jardinópolis", "Leme", "Limeira", "Matão", 
@@ -122,25 +120,6 @@
         let MASTER_CITIES = [];
         let selectedOfferType = null;
         window.globalParsedBlocks = [];
-
-        // --- SELEÇÃO DE LOJA (BOTÕES INICIAIS) ---
-        document.getElementById('selectSavegnago').addEventListener('click', () => {
-            selectedOfferType = 'SAVEGNAGO';
-            MASTER_CITIES = CITIES_SAVEGNAGO;
-            const btn = document.getElementById('parseButton');
-            btn.className = "btn btn-savegnago w-full sm:w-auto";
-            document.getElementById('headerLogo').src = "https://savegnagoio.vtexassets.com/assets/vtex/assets-builder/savegnagoio.store-theme/14.0.36/home/logo-save___ee8753fa9fd1e21018b817a0d020549f.png";
-            toggleModal('listTypeModal', false);
-        });
-
-        document.getElementById('selectPaulistao').addEventListener('click', () => {
-            selectedOfferType = 'PAULISTAO';
-            MASTER_CITIES = CITIES_PAULISTAO;
-            const btn = document.getElementById('parseButton');
-            btn.className = "btn btn-paulistao w-full sm:w-auto";
-            document.getElementById('headerLogo').src = "https://paulistaoatacadista.vtexassets.com/assets/vtex.file-manager-graphql/images/91d1697e-7efa-471e-b763-68b8b71430b2___db630f93263bf9ecc924c4493e2279f9.png";
-            toggleModal('listTypeModal', false);
-        });
 
         // --- TIMER ---
         let timerInterval;
@@ -186,7 +165,7 @@
             }
         });
 
-        // --- HELPERS (Funções Auxiliares) ---
+        // --- Core Helpers ---
         function cleanString(str) { return str ? str.replace(/^[\s\u200B-\u200D\uFEFF•●>*-]+/, '').trim() : ''; }
         function nuclearNormalize(str) { return str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") : ""; }
 
@@ -223,7 +202,7 @@
             }).join(' ');
         }
 
-        // --- MOTOR V8.1: REPARAÇÃO E PARSING AVANÇADO ---
+        // --- MOTOR V8: PRÉ-PROCESSAMENTO (CORREÇÃO DE LINHAS QUEBRADAS) ---
         function preprocessText(text) {
             let clean = text.replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ').replace(/\t/g, ' ');
             let lines = clean.split('\n').map(l => l.trim()).filter(l => l !== '');
@@ -309,7 +288,6 @@
                     }
                 }
                 
-                // Trata caso de descrição pendente + código na próxima linha
                 if (pendingDescription && /^\(red\./i.test(line) && line.match(/R\$\s*([\d,.]+)/)) {
                      const fullLine = pendingDescription + " " + line;
                      const match = fullLine.match(/(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
@@ -333,7 +311,10 @@
             return products;
         }
 
-        // --- BOTÃO ANALISAR ---
+        // --- BOTÕES E FLUXO ---
+        document.getElementById('selectSavegnago').addEventListener('click', () => { selectedOfferType = 'SAVEGNAGO'; MASTER_CITIES = CITIES_SAVEGNAGO; document.getElementById('parseButton').className = "btn btn-savegnago w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://savegnagoio.vtexassets.com/assets/vtex/assets-builder/savegnagoio.store-theme/14.0.36/home/logo-save___ee8753fa9fd1e21018b817a0d020549f.png"; toggleModal('listTypeModal', false); });
+        document.getElementById('selectPaulistao').addEventListener('click', () => { selectedOfferType = 'PAULISTAO'; MASTER_CITIES = CITIES_PAULISTAO; document.getElementById('parseButton').className = "btn btn-paulistao w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://paulistaoatacadista.vtexassets.com/assets/vtex.file-manager-graphql/images/91d1697e-7efa-471e-b763-68b8b71430b2___db630f93263bf9ecc924c4493e2279f9.png"; toggleModal('listTypeModal', false); });
+
         document.getElementById('parseButton').addEventListener('click', async () => {
             const btn = document.getElementById('parseButton');
             const spinner = document.getElementById('loadingSpinner');
@@ -397,14 +378,13 @@
                 showToast("Análise concluída!");
             } catch (e) {
                 console.error(e);
-                showToast("Erro ao processar.", "error");
+                showToast("Erro ao processar. Verifique o console.", "error");
             } finally {
                 spinner.classList.add('hidden'); 
                 btn.disabled = false; 
             }
         });
 
-        // --- BOTÃO LIMPAR ---
         document.getElementById('clearButton').addEventListener('click', () => { 
             document.getElementById('inputText').value = ''; 
             document.getElementById('resultsContainer').innerHTML = ''; 
@@ -412,193 +392,22 @@
             showToast("Campos limpos!");
         });
 
-        // --- FUNÇÕES DE UI (UI FUNCTIONS) ---
+        // --- HELPERS E UI ---
         function showToast(message, type = 'success') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast-message ${type}`; toast.innerHTML = `<span>${message}</span>`; container.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
         function toggleModal(modalId, show) { const modal = document.getElementById(modalId); if (modal) { if (show) modal.classList.add('visible'); else modal.classList.remove('visible'); } }
-        
-        function copyAndAnimate(text, elementId) { 
-            navigator.clipboard.writeText(text).then(() => { 
-                const el = document.getElementById(elementId); 
-                if(el) { el.style.textDecoration = 'line-through'; el.classList.add('text-gray-400'); } 
-                showToast("Texto copiado!"); 
-            }); 
-        }
-        
+        function copyAndAnimate(text, elementId) { navigator.clipboard.writeText(text).then(() => { const el = document.getElementById(elementId); if(el) { el.style.textDecoration = 'line-through'; el.classList.add('text-gray-400'); } showToast("Texto copiado!"); }); }
         function copySimpleText(text) { navigator.clipboard.writeText(text).then(() => { showToast(`Código ${text} copiado!`); }); }
         function copyLinkUrl(url) { navigator.clipboard.writeText(url).then(() => { showToast(`Link copiado!`); }); }
         function copyCitiesText(containerId) { const el = document.getElementById(containerId); if (el) { const text = el.innerText.trim(); navigator.clipboard.writeText(text).then(() => { showToast("Cidades copiadas!"); }); } }
         function formatPrice(price) { if (price === 'INFO_MISSING') return '<span class="text-[10px] text-gray-500 italic leading-tight block">Sem preço<br>informado</span>'; if (!price) return '—'; const numPrice = parseFloat(String(price).replace(',', '.')); return isNaN(numPrice) ? '—' : `R$ ${numPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`; }
         function markLinkAsVisited(element) { element.classList.add('visited-sku'); }
-
-        function parseCities(allBlocks) {
-            const excludedCitiesNuclear = new Set();
-            for (let i = 1; i < allBlocks.length; i++) {
-                const headerLine = allBlocks[i].header;
-                let rawCities = headerLine.split(/[-–—:]/)[0].trim();
-                rawCities = rawCities.replace(/\s+e\s+/gi, ',').replace(/\//g, ',').replace(/\n/g, ' ');
-                const citiesFound = rawCities.split(',').map(c => cleanString(c)).filter(c => c !== ''); 
-                allBlocks[i].cityList = citiesFound;
-                citiesFound.forEach(city => { excludedCitiesNuclear.add(nuclearNormalize(city)); });
-            }
-            const remainingCities = MASTER_CITIES.filter(masterCity => {
-                const nMaster = nuclearNormalize(masterCity);
-                let isExcluded = false;
-                excludedCitiesNuclear.forEach(excluded => {
-                    if (nMaster === excluded) isExcluded = true;
-                    if (excluded.length > 3 && nMaster.includes(excluded)) isExcluded = true;
-                });
-                return !isExcluded;
-            });
-            allBlocks[0].cityList = remainingCities;
-        }
-
-        function formatCityDisplayList(citiesArray) {
-            if (!citiesArray || citiesArray.length === 0) return "";
-            const unique = [...new Set(citiesArray)];
-            unique.sort((a, b) => a.localeCompare(b));
-            const formatted = unique.map(c => toTitleCase(c));
-            if (formatted.length === 1) return formatted[0];
-            const last = formatted.pop();
-            return formatted.join(', ') + ' e ' + last;
-        }
-
+        function generateSkuLinks(codeString) { if (!codeString || codeString === '-') return '-'; const cleanString = codeString.replace(/red\./gi, '').replace(/[()]/g, ''); const codes = cleanString.split(/[/-]/).map(c => c.trim()).filter(c => /^\d+$/.test(c)); if (codes.length === 0) return codeString; const baseUrl = (selectedOfferType === 'SAVEGNAGO') ? 'https://www.savegnago.com.br/' : 'https://www.paulistaoatacadista.com.br/'; return codes.map(code => { const fullUrl = `${baseUrl}${code}`; return `<div class="flex items-center gap-1 mb-1 last:mb-0 bg-blue-50 p-1 rounded border border-blue-100"><a href="${fullUrl}" target="_blank" class="sku-link flex-grow text-center" title="Abrir produto ${code}" onclick="markLinkAsVisited(this)">${code} <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[0.6rem]"></i></a><button onclick="copySimpleText('${code}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar código"><i class="fa-regular fa-file"></i></button><button onclick="copyLinkUrl('${fullUrl}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar Link"><i class="fa-solid fa-link"></i></button></div>`; }).join(''); }
+        function parseCities(allBlocks) { const excludedCitiesNuclear = new Set(); for (let i = 1; i < allBlocks.length; i++) { const headerLine = allBlocks[i].header; let rawCities = headerLine.split(/[-–—:]/)[0].trim(); rawCities = rawCities.replace(/\s+e\s+/gi, ',').replace(/\//g, ',').replace(/\n/g, ' '); const citiesFound = rawCities.split(',').map(c => cleanString(c)).filter(c => c !== ''); allBlocks[i].cityList = citiesFound; citiesFound.forEach(city => { excludedCitiesNuclear.add(nuclearNormalize(city)); }); } const remainingCities = MASTER_CITIES.filter(masterCity => { const nMaster = nuclearNormalize(masterCity); let isExcluded = false; excludedCitiesNuclear.forEach(excluded => { if (nMaster === excluded) isExcluded = true; if (excluded.length > 3 && nMaster.includes(excluded)) isExcluded = true; }); return !isExcluded; }); allBlocks[0].cityList = remainingCities; }
+        function formatCityDisplayList(citiesArray) { if (!citiesArray || citiesArray.length === 0) return ""; const unique = [...new Set(citiesArray)]; unique.sort((a, b) => a.localeCompare(b)); const formatted = unique.map(c => toTitleCase(c)); if (formatted.length === 1) return formatted[0]; const last = formatted.pop(); return formatted.join(', ') + ' e ' + last; }
+        function renderResultsTable(products, resultsContainer, locationTitle, cityList, blockIndex) { const blockContainer = document.createElement('div'); blockContainer.className = 'mb-10'; let buttonsHtml = ''; if (blockIndex === 0) { buttonsHtml += `<button onclick="reorderAllTables()" class="btn btn-warning py-2 px-3 text-sm"><i class="fa-solid fa-arrow-down-1-9"></i> Reordenar Todas</button>`; } buttonsHtml += `<button onclick="exportToExcel(${blockIndex})" class="btn btn-excel py-2 px-3 text-sm"><i class="fa-solid fa-file-excel"></i> Excel</button>`; const formattedCities = formatCityDisplayList(cityList); let displayTitle = (blockIndex === 0) ? "LISTA GERAL (RESTANTE)" : `LISTA ESPECÍFICA ${blockIndex}`; const citiesHtml = formattedCities ? `<div class="bg-gray-50 p-2 rounded border border-gray-100 mt-2 flex justify-between items-start gap-2"><p class="text-sm text-gray-600 font-medium" id="cities-text-${blockIndex}"><i class="fa-solid fa-map-pin text-red-500 mr-1"></i> ${formattedCities}</p><button onclick="copyCitiesText('cities-text-${blockIndex}')" class="text-gray-400 hover:text-blue-600 text-sm whitespace-nowrap" title="Copiar cidades"><i class="fa-regular fa-copy"></i> Copiar</button></div>` : '<p class="text-sm text-red-500 mt-2 font-medium italic"><i class="fa-solid fa-triangle-exclamation"></i> Nenhuma cidade identificada.</p>'; const headerHtml = `<div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-4"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><div><h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">${displayTitle} ${blockIndex === 0 ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Automático</span>' : ''}</h2>${citiesHtml}</div><div class="flex gap-2 self-end md:self-center">${buttonsHtml}</div></div></div>`; blockContainer.innerHTML = headerHtml; const tableContainer = document.createElement('div'); tableContainer.className = 'overflow-x-auto card'; const orderHeader = blockIndex === 0 ? '<th class="px-4 py-3 text-center w-16 text-xs font-bold text-gray-600 uppercase">Ordem</th>' : '<th class="px-4 py-3 text-center w-10 text-xs font-bold text-gray-600 uppercase">#</th>'; let specialColumnHeader = (selectedOfferType === 'SAVEGNAGO') ? '<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Save Ganhe</th>' : '<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Cliente Campeão</th>'; let tableHtml = `<table class="min-w-full" id="table-${blockIndex}"><thead class="bg-gray-50 sticky-header"><tr><th class="px-4 py-3 text-center w-10"><i class="fa-solid fa-check"></i></th>${orderHeader}<th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Código / Link</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Descrição</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Preço Normal</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nosso Cartão</th>${specialColumnHeader}<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Info Extra</th></tr></thead><tbody class="divide-y divide-gray-200">`; let visibleRowsCount = 0; const refBlock = window.globalParsedBlocks.length > 0 ? window.globalParsedBlocks[0] : null; products.forEach((product, idx) => { const descId = `desc-${blockIndex}-${idx}`; const extraId = `extra-${blockIndex}-${idx}`; const rowClass = (visibleRowsCount % 2 === 0) ? 'bg-white' : 'bg-gray-50'; const rawKey = product.code || product.description || `item-${idx}`; const safeKey = rawKey.replace(/"/g, '&quot;'); let showRow = true; let descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}">${product.description}</span><i class="fa-regular fa-copy text-gray-300"></i></div>`; let normalPriceContent = product.priceNormal ? formatPrice(product.priceNormal) : '<span class="text-[10px] text-gray-500 italic leading-tight block">Sem preço<br>informado</span>'; let cellClassCard = "bg-blue-50 text-blue-900 border-x border-blue-100"; let cellClassSpecial = (selectedOfferType === 'SAVEGNAGO') ? "bg-pink-50 text-pink-900 border-x border-pink-100" : "bg-red-50 text-red-900 border-x border-red-100"; let cardPriceContent = formatPrice(product.priceNossoCartao); let specialPriceValue = (selectedOfferType === 'SAVEGNAGO') ? (product.priceSaveGanhe || '-') : (product.priceClienteCampeao || '-'); let specialPriceContent = specialPriceValue !== '-' ? formatPrice(specialPriceValue) : '-'; if (blockIndex > 0) { const refProduct = refBlock && refBlock.products[idx]; let isDifferent = false; if (!refProduct) { isDifferent = true; descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}" class="text-green-700 font-bold">${product.description} <span class="text-xs bg-green-200 px-1 rounded ml-1">NOVO</span></span><i class="fa-regular fa-copy text-gray-300"></i></div>`; } else { if (product.description !== refProduct.description) { isDifferent = true; descContent = `<div class="flex flex-col gap-1"><span id="${descId}" class="text-red-600 font-bold">${product.description}</span><span class="text-[10px] text-red-500 line-through">Era: ${refProduct.description}</span></div>`; } if (product.priceNormal !== refProduct.priceNormal) { isDifferent = true; let newP = product.priceNormal ? formatPrice(product.priceNormal) : '<span class="text-[10px] text-gray-500 italic">Sem preço</span>'; let oldP = refProduct.priceNormal ? formatPrice(refProduct.priceNormal) : 'Sem preço'; normalPriceContent = `<div class="text-red-600 font-bold">${newP}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${oldP}</div>`; } if (product.priceNossoCartao !== refProduct.priceNossoCartao) { isDifferent = true; if(product.priceNossoCartao && !refProduct.priceNossoCartao) cardPriceContent = `<div class="text-green-700 font-bold">${formatPrice(product.priceNossoCartao)}</div><div class="text-[10px] text-green-600 mt-0.5 font-bold">Adicionada</div>`; else if(product.priceNossoCartao) cardPriceContent = `<div class="text-red-600 font-bold">${formatPrice(product.priceNossoCartao)}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${formatPrice(refProduct.priceNossoCartao)}</div>`; else cardPriceContent = `<span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Removida</span>`; } let refSpecial = (selectedOfferType === 'SAVEGNAGO') ? refProduct.priceSaveGanhe : refProduct.priceClienteCampeao; let currentSpec = (selectedOfferType === 'SAVEGNAGO') ? product.priceSaveGanhe : product.priceClienteCampeao; let refSpec = (selectedOfferType === 'SAVEGNAGO') ? refProduct.priceSaveGanhe : refProduct.priceClienteCampeao; if (currentSpec !== refSpec) { isDifferent = true; if(currentSpec && !refSpec) specialPriceContent = `<div class="text-green-700 font-bold">${formatPrice(currentSpec)}</div><div class="text-[10px] text-green-600 mt-0.5 font-bold">Adicionada</div>`; else if(currentSpec) specialPriceContent = `<div class="text-red-600 font-bold">${formatPrice(currentSpec)}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${formatPrice(refSpec)}</div>`; else specialPriceContent = `<span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Removida</span>`; } } if (!isDifferent) showRow = false; } if (showRow) { visibleRowsCount++; const orderCell = blockIndex === 0 ? `<input type="number" class="order-input" placeholder="#">` : `<span class="text-gray-400 text-xs">${idx + 1}</span>`; tableHtml += `<tr class="${rowClass} hover:bg-gray-100 transition-colors" data-key="${safeKey}"><td class="px-4 py-4 text-center"><input type="checkbox" class="w-5 h-5 text-green-600 rounded focus:ring-green-500 cursor-pointer" onchange="toggleRowCompletion(this)"></td><td class="px-4 py-4 text-center">${orderCell}</td><td class="px-4 py-4 whitespace-nowrap">${generateSkuLinks(product.code)}</td><td class="px-4 py-4 text-sm font-medium text-gray-900 cursor-pointer" onclick="copyAndAnimate('${(product.description || '').replace(/'/g, "\\'")}', '${descId}')">${descContent}</td><td class="px-4 py-4 text-center text-gray-800 font-semibold">${normalPriceContent}</td><td class="px-4 py-4 text-center font-bold ${cellClassCard}">${cardPriceContent}</td><td class="px-4 py-4 text-center font-bold ${cellClassSpecial}">${specialPriceContent}</td><td class="px-4 py-4 text-center text-sm text-purple-700 italic bg-purple-50">${product.extraInfo ? `<span class="cursor-pointer" onclick="copyAndAnimate('${product.extraInfo.replace(/'/g, "\\'")}', '${extraId}')" id="${extraId}"><i class="fa-solid fa-circle-info mr-1"></i> ${product.extraInfo}</span>` : '<span class="text-gray-300">-</span>'}</td></tr>`; } }); tableHtml += `</tbody></table>`; if (visibleRowsCount === 0 && blockIndex > 0) { tableHtml = `<div class="p-6 text-center text-gray-500 italic"><i class="fa-solid fa-check-circle text-green-500 mr-2"></i>Todos os produtos são idênticos à lista geral.</div>`; } tableContainer.innerHTML = tableHtml; blockContainer.appendChild(tableContainer); resultsContainer.appendChild(blockContainer); }
         function toggleRowCompletion(checkbox) { const row = checkbox.closest('tr'); if (checkbox.checked) row.classList.add('row-completed'); else row.classList.remove('row-completed'); }
-
-        // --- GERA SALESFORCE HTML ---
-        function generateSalesforceHTML(blockIndex) {
-            const block = window.globalParsedBlocks[blockIndex];
-            if (!block) return;
-            let htmlOutput = `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; font-family: Arial, sans-serif;">`;
-            block.products.forEach((product) => {
-                let normalPrice = product.priceNormal ? `R$ ${product.priceNormal}` : "";
-                let specialPrice = ""; let specialLabel = "";
-                if (selectedOfferType === 'SAVEGNAGO' && product.priceSaveGanhe && product.priceSaveGanhe !== 'INFO_MISSING') { specialPrice = `R$ ${product.priceSaveGanhe}`; specialLabel = "Save Ganhe"; } 
-                else if (selectedOfferType === 'SAVEGNAGO' && product.priceNossoCartao && product.priceNossoCartao !== 'INFO_MISSING') { specialPrice = `R$ ${product.priceNossoCartao}`; specialLabel = "Nosso Cartão"; } 
-                else if (selectedOfferType === 'PAULISTAO' && product.priceClienteCampeao && product.priceClienteCampeao !== 'INFO_MISSING') { specialPrice = `R$ ${product.priceClienteCampeao}`; specialLabel = "Cliente Campeão"; } 
-                else if (selectedOfferType === 'PAULISTAO' && product.priceNossoCartao && product.priceNossoCartao !== 'INFO_MISSING') { specialPrice = `R$ ${product.priceNossoCartao}`; specialLabel = "Nosso Cartão"; }
-                let code = product.code && product.code !== '-' ? product.code.split('/')[0] : '';
-                let linkUrl = code ? (selectedOfferType === 'SAVEGNAGO' ? `https://www.savegnago.com.br/${code}` : '#') : '#';
-                htmlOutput += `<tr><td style="padding: 10px; border-bottom: 1px solid #ddd; width: 100px; text-align: center;"><a href="${linkUrl}" target="_blank" style="text-decoration:none;"><img src="https://placehold.co/100x100?text=IMG-${code}" alt="${product.description}" width="100" style="display:block; border:0;" /></a></td><td style="padding: 10px; border-bottom: 1px solid #ddd; vertical-align: middle;"><a href="${linkUrl}" target="_blank" style="text-decoration:none; color: #333;"><strong style="font-size: 14px;">${product.description}</strong></a>${product.extraInfo ? `<div style="font-size: 12px; color: #666;">${product.extraInfo}</div>` : ''}</td><td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: middle;">${normalPrice ? `<div style="font-size: 14px; color: #333;">${normalPrice}</div>` : ''}${specialPrice ? `<div style="font-size: 16px; color: #d00; font-weight: bold;">${specialPrice} <span style="font-size:10px; font-weight:normal;">(${specialLabel})</span></div>` : ''}</td></tr>`;
-            });
-            htmlOutput += `</table>`;
-            navigator.clipboard.writeText(htmlOutput).then(() => { showToast("HTML para Salesforce copiado!"); });
-        }
-
-        // --- GERA SKU LINKS ---
-        function generateSkuLinks(codeString) {
-            if (!codeString || codeString === '-') return '-';
-            const cleanString = codeString.replace(/red\./gi, '').replace(/[()]/g, '');
-            const codes = cleanString.split(/[/-]/).map(c => c.trim()).filter(c => /^\d+$/.test(c));
-            if (codes.length === 0) return codeString;
-            const baseUrl = (selectedOfferType === 'SAVEGNAGO') ? 'https://www.savegnago.com.br/' : 'https://www.paulistaoatacadista.com.br/';
-            return codes.map(code => {
-                const fullUrl = `${baseUrl}${code}`;
-                return `<div class="flex items-center gap-1 mb-1 last:mb-0 bg-blue-50 p-1 rounded border border-blue-100"><a href="${fullUrl}" target="_blank" class="sku-link flex-grow text-center" title="Abrir produto ${code}" onclick="markLinkAsVisited(this)">${code} <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[0.6rem]"></i></a><button onclick="copySimpleText('${code}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar código"><i class="fa-regular fa-file"></i></button><button onclick="copyLinkUrl('${fullUrl}')" class="text-gray-500 hover:text-blue-600 p-1 rounded hover:bg-blue-100" title="Copiar Link"><i class="fa-solid fa-link"></i></button></div>`;
-            }).join('');
-        }
-
-        // --- REORDER TABLES ---
-        function reorderAllTables() {
-            const table0 = document.getElementById('table-0');
-            if (!table0) return;
-            const rows0 = Array.from(table0.querySelectorAll('tbody tr'));
-            const orderMap = {};
-            rows0.forEach(row => { const input = row.querySelector('.order-input'); const key = row.dataset.key; if (input && input.value !== '') orderMap[key] = parseInt(input.value); else orderMap[key] = 999999; });
-            window.globalParsedBlocks.forEach((block) => { block.products.sort((a, b) => { const keyA = (a.code || a.description).replace(/"/g, '&quot;'); const keyB = (b.code || b.description).replace(/"/g, '&quot;'); const orderA = orderMap.hasOwnProperty(keyA) ? orderMap[keyA] : 999999; const orderB = orderMap.hasOwnProperty(keyB) ? orderMap[keyB] : 999999; if (orderA !== orderB) return orderA - orderB; return a.description.localeCompare(b.description); }); });
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = '';
-            window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); });
-            const newRows0 = document.getElementById('table-0').querySelectorAll('tbody tr');
-            newRows0.forEach(row => { const key = row.dataset.key; if (orderMap[key] !== 999999) row.querySelector('.order-input').value = orderMap[key]; });
-            showToast("Todas as listas foram reordenadas!");
-        }
-
-        // --- EXPORT TO EXCEL ---
-        function exportToExcel(blockIndex) {
-            const table = document.getElementById(`table-${blockIndex}`);
-            if (!table) return;
-            const wb = XLSX.utils.table_to_book(table, {sheet: "Ofertas"});
-            let suffix = "";
-            if (blockIndex > 0) { const rows = table.querySelectorAll('tbody tr').length; if(rows > 0) suffix = "_COM_ALTERACOES"; }
-            XLSX.writeFile(wb, `Ofertas_${selectedOfferType}_Lista_${blockIndex}${suffix}.xlsx`);
-        }
-
-        // --- RENDERIZAR TABELA ---
-        function renderResultsTable(products, resultsContainer, locationTitle, cityList, blockIndex) {
-            const blockContainer = document.createElement('div');
-            blockContainer.className = 'mb-10';
-            
-            let buttonsHtml = '';
-            if (blockIndex === 0) { buttonsHtml += `<button onclick="reorderAllTables()" class="btn btn-warning py-2 px-3 text-sm"><i class="fa-solid fa-arrow-down-1-9"></i> Reordenar Todas</button>`; }
-            buttonsHtml += `<button onclick="generateSalesforceHTML(${blockIndex})" class="btn btn-html py-2 px-3 text-sm"><i class="fa-solid fa-code"></i> HTML</button>`;
-            buttonsHtml += `<button onclick="exportToExcel(${blockIndex})" class="btn btn-excel py-2 px-3 text-sm"><i class="fa-solid fa-file-excel"></i> Excel</button>`;
-
-            const formattedCities = formatCityDisplayList(cityList);
-            let displayTitle = (blockIndex === 0) ? "LISTA GERAL (RESTANTE)" : `LISTA ESPECÍFICA ${blockIndex}`;
-            
-            const citiesHtml = formattedCities 
-                ? `<div class="bg-gray-50 p-2 rounded border border-gray-100 mt-2 flex justify-between items-start gap-2"><p class="text-sm text-gray-600 font-medium" id="cities-text-${blockIndex}"><i class="fa-solid fa-map-pin text-red-500 mr-1"></i> ${formattedCities}</p><button onclick="copyCitiesText('cities-text-${blockIndex}')" class="text-gray-400 hover:text-blue-600 text-sm whitespace-nowrap" title="Copiar cidades"><i class="fa-regular fa-copy"></i> Copiar</button></div>` 
-                : '<p class="text-sm text-red-500 mt-2 font-medium italic"><i class="fa-solid fa-triangle-exclamation"></i> Nenhuma cidade identificada.</p>';
-
-            const headerHtml = `<div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-4"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><div><h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">${displayTitle} ${blockIndex === 0 ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Automático</span>' : ''}</h2>${citiesHtml}</div><div class="flex gap-2 self-end md:self-center">${buttonsHtml}</div></div></div>`;
-            blockContainer.innerHTML = headerHtml;
-
-            const tableContainer = document.createElement('div');
-            tableContainer.className = 'overflow-x-auto card';
-            const orderHeader = blockIndex === 0 ? '<th class="px-4 py-3 text-center w-16 text-xs font-bold text-gray-600 uppercase">Ordem</th>' : '<th class="px-4 py-3 text-center w-10 text-xs font-bold text-gray-600 uppercase">#</th>';
-            let specialColumnHeader = (selectedOfferType === 'SAVEGNAGO') ? '<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Save Ganhe</th>' : '<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Cliente Campeão</th>';
-
-            let tableHtml = `<table class="min-w-full" id="table-${blockIndex}"><thead class="bg-gray-50 sticky-header"><tr><th class="px-4 py-3 text-center w-10"><i class="fa-solid fa-check"></i></th>${orderHeader}<th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Código / Link</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Descrição</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Preço Normal</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nosso Cartão</th>${specialColumnHeader}<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Info Extra</th></tr></thead><tbody class="divide-y divide-gray-200">`;
-
-            let visibleRowsCount = 0;
-            const refBlock = window.globalParsedBlocks.length > 0 ? window.globalParsedBlocks[0] : null;
-
-            products.forEach((product, idx) => {
-                const descId = `desc-${blockIndex}-${idx}`;
-                const extraId = `extra-${blockIndex}-${idx}`;
-                const rowClass = (visibleRowsCount % 2 === 0) ? 'bg-white' : 'bg-gray-50';
-                const rawKey = product.code || product.description || `item-${idx}`;
-                const safeKey = rawKey.replace(/"/g, '&quot;'); 
-
-                let showRow = true;
-                let descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}">${product.description}</span><i class="fa-regular fa-copy text-gray-300"></i></div>`;
-                let normalPriceContent = product.priceNormal ? formatPrice(product.priceNormal) : '<span class="text-[10px] text-gray-500 italic leading-tight block">Sem preço<br>informado</span>';
-                let cellClassCard = "bg-blue-50 text-blue-900 border-x border-blue-100";
-                let cellClassSpecial = (selectedOfferType === 'SAVEGNAGO') ? "bg-pink-50 text-pink-900 border-x border-pink-100" : "bg-red-50 text-red-900 border-x border-red-100";
-                let cardPriceContent = formatPrice(product.priceNossoCartao);
-                let specialPriceValue = (selectedOfferType === 'SAVEGNAGO') ? (product.priceSaveGanhe || '-') : (product.priceClienteCampeao || '-');
-                let specialPriceContent = specialPriceValue !== '-' ? formatPrice(specialPriceValue) : '-';
-
-                if (blockIndex > 0) {
-                    const refProduct = refBlock && refBlock.products[idx];
-                    let isDifferent = false;
-                    if (!refProduct) {
-                        isDifferent = true; 
-                        descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}" class="text-green-700 font-bold">${product.description} <span class="text-xs bg-green-200 px-1 rounded ml-1">NOVO</span></span><i class="fa-regular fa-copy text-gray-300"></i></div>`;
-                    } else {
-                        if (product.description !== refProduct.description) { isDifferent = true; descContent = `<div class="flex flex-col gap-1"><span id="${descId}" class="text-red-600 font-bold">${product.description}</span><span class="text-[10px] text-red-500 line-through">Era: ${refProduct.description}</span></div>`; }
-                        if (product.priceNormal !== refProduct.priceNormal) { isDifferent = true; let newP = product.priceNormal ? formatPrice(product.priceNormal) : '<span class="text-[10px] text-gray-500 italic">Sem preço</span>'; let oldP = refProduct.priceNormal ? formatPrice(refProduct.priceNormal) : 'Sem preço'; normalPriceContent = `<div class="text-red-600 font-bold">${newP}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${oldP}</div>`; }
-                        if (product.priceNossoCartao !== refProduct.priceNossoCartao) { isDifferent = true; if(product.priceNossoCartao && !refProduct.priceNossoCartao) cardPriceContent = `<div class="text-green-700 font-bold">${formatPrice(product.priceNossoCartao)}</div><div class="text-[10px] text-green-600 mt-0.5 font-bold">Adicionada</div>`; else if(product.priceNossoCartao) cardPriceContent = `<div class="text-red-600 font-bold">${formatPrice(product.priceNossoCartao)}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${formatPrice(refProduct.priceNossoCartao)}</div>`; else cardPriceContent = `<span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Removida</span>`; }
-                        let currentSpec = (selectedOfferType === 'SAVEGNAGO') ? product.priceSaveGanhe : product.priceClienteCampeao;
-                        let refSpec = (selectedOfferType === 'SAVEGNAGO') ? refProduct.priceSaveGanhe : refProduct.priceClienteCampeao;
-                        if (currentSpec !== refSpec) { isDifferent = true; if(currentSpec && !refSpec) specialPriceContent = `<div class="text-green-700 font-bold">${formatPrice(currentSpec)}</div><div class="text-[10px] text-green-600 mt-0.5 font-bold">Adicionada</div>`; else if(currentSpec) specialPriceContent = `<div class="text-red-600 font-bold">${formatPrice(currentSpec)}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${formatPrice(refSpec)}</div>`; else specialPriceContent = `<span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Removida</span>`; }
-                    }
-                    if (!isDifferent) showRow = false; 
-                }
-
-                if (showRow) {
-                    visibleRowsCount++;
-                    const orderCell = blockIndex === 0 ? `<input type="number" class="order-input" placeholder="#">` : `<span class="text-gray-400 text-xs">${idx + 1}</span>`;
-                    tableHtml += `<tr class="${rowClass} hover:bg-gray-100 transition-colors" data-key="${safeKey}"><td class="px-4 py-4 text-center"><input type="checkbox" class="w-5 h-5 text-green-600 rounded focus:ring-green-500 cursor-pointer" onchange="toggleRowCompletion(this)"></td><td class="px-4 py-4 text-center">${orderCell}</td><td class="px-4 py-4 whitespace-nowrap">${generateSkuLinks(product.code)}</td><td class="px-4 py-4 text-sm font-medium text-gray-900 cursor-pointer" onclick="copyAndAnimate('${(product.description || '').replace(/'/g, "\\'")}', '${descId}')">${descContent}</td><td class="px-4 py-4 text-center text-gray-800 font-semibold">${normalPriceContent}</td><td class="px-4 py-4 text-center font-bold ${cellClassCard}">${cardPriceContent}</td><td class="px-4 py-4 text-center font-bold ${cellClassSpecial}">${specialPriceContent}</td><td class="px-4 py-4 text-center text-sm text-purple-700 italic bg-purple-50">${product.extraInfo ? `<span class="cursor-pointer" onclick="copyAndAnimate('${product.extraInfo.replace(/'/g, "\\'")}', '${extraId}')" id="${extraId}"><i class="fa-solid fa-circle-info mr-1"></i> ${product.extraInfo}</span>` : '<span class="text-gray-300">-</span>'}</td></tr>`;
-                }
-            });
-            tableHtml += `</tbody></table>`;
-            if (visibleRowsCount === 0 && blockIndex > 0) { tableHtml = `<div class="p-6 text-center text-gray-500 italic"><i class="fa-solid fa-check-circle text-green-500 mr-2"></i>Todos os produtos são idênticos à lista geral.</div>`; }
-            tableContainer.innerHTML = tableHtml;
-            blockContainer.appendChild(tableContainer);
-            resultsContainer.appendChild(blockContainer);
-        }
-
+        function reorderAllTables() { const table0 = document.getElementById('table-0'); if (!table0) return; const rows0 = Array.from(table0.querySelectorAll('tbody tr')); const orderMap = {}; rows0.forEach(row => { const input = row.querySelector('.order-input'); const key = row.dataset.key; if (input && input.value !== '') orderMap[key] = parseInt(input.value); else orderMap[key] = 999999; }); window.globalParsedBlocks.forEach((block) => { block.products.sort((a, b) => { const keyA = (a.code || a.description).replace(/"/g, '&quot;'); const keyB = (b.code || b.description).replace(/"/g, '&quot;'); const orderA = orderMap.hasOwnProperty(keyA) ? orderMap[keyA] : 999999; const orderB = orderMap.hasOwnProperty(keyB) ? orderMap[keyB] : 999999; if (orderA !== orderB) return orderA - orderB; return a.description.localeCompare(b.description); }); }); const container = document.getElementById('resultsContainer'); container.innerHTML = ''; window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); }); const newRows0 = document.getElementById('table-0').querySelectorAll('tbody tr'); newRows0.forEach(row => { const key = row.dataset.key; if (orderMap[key] !== 999999) row.querySelector('.order-input').value = orderMap[key]; }); showToast("Todas as listas foram reordenadas!"); }
+        function exportToExcel(blockIndex) { const table = document.getElementById(`table-${blockIndex}`); if (!table) return; const wb = XLSX.utils.table_to_book(table, {sheet: "Ofertas"}); let suffix = ""; if (blockIndex > 0) { const rows = table.querySelectorAll('tbody tr').length; if(rows > 0) suffix = "_COM_ALTERACOES"; } XLSX.writeFile(wb, `Ofertas_${selectedOfferType}_Lista_${blockIndex}${suffix}.xlsx`); }
         document.getElementById('increase-font').addEventListener('click', () => { document.documentElement.style.fontSize = (parseFloat(getComputedStyle(document.documentElement).fontSize) + 1) + 'px'; });
         document.getElementById('decrease-font').addEventListener('click', () => { document.documentElement.style.fontSize = (parseFloat(getComputedStyle(document.documentElement).fontSize) - 1) + 'px'; });
         document.getElementById('high-contrast').addEventListener('click', () => { document.body.classList.toggle('high-contrast'); });
