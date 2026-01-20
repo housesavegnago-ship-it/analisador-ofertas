@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador v9.6 - Cópia Ajustada</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
+    <title>Analisador v9.7 - Correção de Leitura</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -129,8 +129,8 @@
             <div class="card p-6 md:p-8 mb-8">
                 <div class="flex justify-between items-end mb-4">
                     <div>
-                        <h1 class="text-2xl font-extrabold text-gray-900">Analisador de Ofertas v9.6</h1>
-                        <p class="text-gray-500 text-sm">Cópia: Preço antes do Código</p>
+                        <h1 class="text-2xl font-extrabold text-gray-900">Analisador de Ofertas v9.7</h1>
+                        <p class="text-gray-500 text-sm">Leitura Inteligente & Correção de Falhas</p>
                     </div>
                     <button onclick="openHistory()" class="text-blue-600 hover:text-blue-800 font-bold text-sm flex items-center gap-1"><i class="fa-solid fa-list-check"></i> Histórico</button>
                 </div>
@@ -161,7 +161,7 @@
 
         <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
             <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.9.6.0 (Ajuste Formatação Cópia) - 2026</p>
+            <p class="mt-1">v.9.7.0 (Core Refeito para Leitura de Linhas) - 2026</p>
         </footer>
     </div>
 
@@ -264,36 +264,62 @@
         function autoCorrectText(text) { if (!text) return text; text = text.replace(/\b(\d+([.,]\d+)?)\s*l\b/gi, '$1L'); text = text.replace(/\b1,5\s*-/g, '1,5L'); const dictionary = { 'muçarela': 'Mussarela', 'mussarela': 'Mussarela', 'pateko': 'Patéko', 'contra filé': 'Contrafilé', 'contra-filé': 'Contrafilé', 'contrafilé': 'Contrafilé', 'pêra': 'Pera', 'pera': 'Pera', 'tub': 'Tubo', 'tubo': 'Tubo', 'mms': 'M&Ms', 'm&m': 'M&Ms', 'm&ms': 'M&Ms', 'kilo': 'kg', 'sbp': 'SBP', 'off': 'OFF', 'on': 'ON' }; Object.keys(dictionary).forEach(key => { const regex = new RegExp(`\\b${key}\\b`, 'gi'); text = text.replace(regex, dictionary[key]); }); text = text.replace(/\bm&m\b/gi, 'M&Ms'); return text; }
         function capitalizeDescription(description) { if (!description) return ""; return description.split(' ').map(word => { if (['e', 'de', 'da', 'do', 'dos', 'das', 'com', 'sem', 'em', 'por', 'para', 'ao'].includes(word.toLowerCase())) { return word.toLowerCase(); } if (['SBP', 'OFF', 'ON', 'M&Ms', '1L', '2L', '3L', '5L', '10L', '1,5L', '1.5L', '1,3L'].includes(word)) { return word; } if (/\d/.test(word)) return word; return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(); }).join(' '); }
 
+        // --- PREPROCESS: CORREÇÃO DE LINHAS (ATUALIZADO) ---
         function preprocessText(text) {
             let clean = text.replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ').replace(/\t/g, ' ');
             let lines = clean.split('\n').map(l => l.trim()).filter(l => l !== '');
             let fixedLines = [];
             for (let i = 0; i < lines.length; i++) {
                 let current = lines[i];
+                // Caso: R$ sozinho, ou (red.xx) R$..., ou continuação de cabeçalho
                 const isDanglingPrice = /^([-–—:]\s*)?R\$|^[\d,.]+(\)|$)/i.test(current);
+                const isCodePrice = /^\(red\./i.test(current); // Começa com (red.
                 const isHeaderContinuation = /^(válidas\s+para|e\s+\d{2}\/\d{2})/i.test(current);
-                if ((isDanglingPrice || isHeaderContinuation) && fixedLines.length > 0) {
-                    let prev = fixedLines.pop(); fixedLines.push(prev + " " + current);
-                } else { fixedLines.push(current); }
+
+                // Se começa com preço OU com (red. (que pode ser continuação da descrição anterior)
+                if ((isDanglingPrice || isCodePrice || isHeaderContinuation) && fixedLines.length > 0) {
+                    let prev = fixedLines.pop();
+                    fixedLines.push(prev + " " + current);
+                } else {
+                    fixedLines.push(current);
+                }
             }
             return fixedLines;
         }
 
+        // --- PARSER PRINCIPAL (STICKY) ---
         function parseProductBlock(lines) {
             const products = [];
             let pendingDescription = null; 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
+
+                // Tenta achar linha completa: Texto ... R$ ...
                 const mainProductMatch = line.match(/(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
-                const isSpecialPrice = line.startsWith('(') || /Nosso Cartão|Save Ganhe|Cliente Campeão/i.test(line);
+                
+                // Verifica linhas especiais
+                const isSpecialPrice = line.startsWith('(') && !/^\(red\./i.test(line) // Não pode ser código (red.
+                                       || /Nosso Cartão|Save Ganhe|Cliente Campeão/i.test(line);
+
                 if (mainProductMatch && !isSpecialPrice) {
-                    const rawDesc = mainProductMatch[1].trim(); const price = mainProductMatch[2].trim(); const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); const code = codeMatch ? codeMatch[1].trim() : ''; let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc; cleanDesc = cleanDesc.replace(/^\d+\)\s*/, '');
+                    const rawDesc = mainProductMatch[1].trim(); const price = mainProductMatch[2].trim(); 
+                    const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); 
+                    const code = codeMatch ? codeMatch[1].trim() : ''; 
+                    let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc; 
+                    cleanDesc = cleanDesc.replace(/^\d+\)\s*/, ''); // Remove numeração antiga
+
                     products.push({ code: code, description: capitalizeDescription(autoCorrectText(cleanDesc)), priceNormal: price, priceNossoCartao: null, priceSaveGanhe: null, priceClienteCampeao: null, priceNaEmbalagem: null, priceNestaUnidade: null, extraInfo: null, textNaEmbalagem: null, textNestaUnidade: null });
                     pendingDescription = null; 
+
                 } else if (!isSpecialPrice && !mainProductMatch) {
+                    // Se não casou com produto nem especial, é uma descrição pendente (ex: "Arroz Tio João")
+                    // Se já tinha uma pendente, significa que a anterior era lixo ou cabeçalho perdido, sobrescreve ou ignora.
+                    // Para segurança, vamos assumir que é a nova descrição.
                     pendingDescription = line;
+
                 } else if (isSpecialPrice) {
+                    // Adiciona info ao último produto
                     if (products.length > 0) {
                         const currentProduct = products[products.length - 1];
                         const upperLine = line.toUpperCase();
@@ -309,12 +335,20 @@
                         }
                     }
                 }
-                if (pendingDescription && /^\(red\./i.test(line) && line.match(/R\$\s*([\d,.]+)/)) {
-                     const fullLine = pendingDescription + " " + line; const match = fullLine.match(/(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
+                
+                // Recuperação de linha quebrada que escapou do preprocess (ex: descrição pendente + linha que tem R$)
+                if (pendingDescription && line.match(/R\$\s*([\d,.]+)/) && !isSpecialPrice) {
+                     const fullLine = pendingDescription + " " + line; 
+                     const match = fullLine.match(/(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
                      if (match) {
-                        const rawDesc = match[1].trim(); const price = match[2].trim(); const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); const code = codeMatch ? codeMatch[1].trim() : ''; let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc;
+                        const rawDesc = match[1].trim(); const price = match[2].trim(); 
+                        const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); 
+                        const code = codeMatch ? codeMatch[1].trim() : ''; 
+                        let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc;
+                        
                         products.push({ code: code, description: capitalizeDescription(autoCorrectText(cleanDesc)), priceNormal: price, priceNossoCartao: null, priceSaveGanhe: null, priceClienteCampeao: null, priceNaEmbalagem: null, priceNestaUnidade: null, extraInfo: null, textNaEmbalagem: null, textNestaUnidade: null });
-                     } pendingDescription = null;
+                     } 
+                     pendingDescription = null;
                 }
             }
             return products;
@@ -333,7 +367,12 @@
                 fixedLines.forEach(line => { const isHeader = /[A-ZÁÉÍÓÚÂÊÔÃÕÇ\s,]+[-–—]\s*OFERTAS VÁLIDAS/i.test(line); if (isHeader) { if (currentBlockLines.length > 0) blocks.push({ lines: currentBlockLines, hasHeader: hasHeader }); currentBlockLines = [line]; hasHeader = true; } else { currentBlockLines.push(line); } });
                 if (currentBlockLines.length > 0) blocks.push({ lines: currentBlockLines, hasHeader: hasHeader });
                 blocks.forEach((blockData, idx) => { let lines = blockData.lines; let header = ""; let locationTitle = "LISTA GERAL"; let productsStartIdx = 0; if (blockData.hasHeader) { header = lines[0]; locationTitle = header.split(/[-–—:]/)[0].trim(); productsStartIdx = 1; } else if (idx === 0) { if (lines[0] && lines[0].toUpperCase().includes('OFERTAS VÁLIDAS')) { header = lines[0]; productsStartIdx = 1; } } const productLines = lines.slice(productsStartIdx); const products = parseProductBlock(productLines); if (products.length > 0) { window.globalParsedBlocks.push({ header: header, locationTitle: locationTitle, cityList: [], products: products }); } });
-                if (window.globalParsedBlocks.length > 0) parseCities(window.globalParsedBlocks); window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); }); showToast("Análise concluída!");
+                
+                if (window.globalParsedBlocks.length === 0) {
+                    showToast("Nenhum produto identificado. Verifique o texto.", "error");
+                } else {
+                    if (window.globalParsedBlocks.length > 0) parseCities(window.globalParsedBlocks); window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); }); showToast("Análise concluída!");
+                }
             } catch (e) { console.error(e); showToast("Erro ao processar.", "error"); } finally { spinner.classList.add('hidden'); btn.disabled = false; }
         });
 
