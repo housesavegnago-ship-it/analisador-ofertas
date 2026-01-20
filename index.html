@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador v9.5 - Texto Completo</title>
+    <title>Analisador v9.6 - Cópia Ajustada</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -129,8 +129,8 @@
             <div class="card p-6 md:p-8 mb-8">
                 <div class="flex justify-between items-end mb-4">
                     <div>
-                        <h1 class="text-2xl font-extrabold text-gray-900">Analisador de Ofertas v9.5</h1>
-                        <p class="text-gray-500 text-sm">Controle de Demanda e Cópia Exata</p>
+                        <h1 class="text-2xl font-extrabold text-gray-900">Analisador de Ofertas v9.6</h1>
+                        <p class="text-gray-500 text-sm">Cópia: Preço antes do Código</p>
                     </div>
                     <button onclick="openHistory()" class="text-blue-600 hover:text-blue-800 font-bold text-sm flex items-center gap-1"><i class="fa-solid fa-list-check"></i> Histórico</button>
                 </div>
@@ -161,7 +161,7 @@
 
         <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
             <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.9.5.0 (Correção de Nomes na Cópia) - 2026</p>
+            <p class="mt-1">v.9.6.0 (Ajuste Formatação Cópia) - 2026</p>
         </footer>
     </div>
 
@@ -352,7 +352,7 @@
         function formatCityDisplayList(citiesArray) { if (!citiesArray || citiesArray.length === 0) return ""; const unique = [...new Set(citiesArray)]; unique.sort((a, b) => a.localeCompare(b)); const formatted = unique.map(c => toTitleCase(c)); if (formatted.length === 1) return formatted[0]; const last = formatted.pop(); return formatted.join(', ') + ' e ' + last; }
         function toggleRowCompletion(checkbox) { const row = checkbox.closest('tr'); if (checkbox.checked) row.classList.add('row-completed'); else row.classList.remove('row-completed'); }
         
-        // --- FUNÇÃO DE COPIAR LISTA DE TEXTO (CORRIGIDA) ---
+        // --- FUNÇÃO DE COPIAR LISTA DE TEXTO (AJUSTADA: Preço antes do Code) ---
         function copyTextList(blockIndex) {
             const table = document.getElementById(`table-${blockIndex}`);
             if (!table) return;
@@ -365,22 +365,22 @@
                 const desc = row.cells[3].innerText.trim();
                 const normalPrice = row.cells[4].innerText.trim().replace('R$ ', '').replace('Sem preço\ninformado', 'S/P');
 
+                // ORDEM ALTERADA: Num - Desc - Preço - Código
                 textToCopy += `${orderVal} - ${desc}`;
-                if (code) textToCopy += ` (red.${code})`;
-                textToCopy += ` – R$ ${normalPrice}`;
+                textToCopy += ` – R$ ${normalPrice}`; // Preço antes
+                if (code) textToCopy += ` (red.${code})`; // Código depois
 
                 const cardPriceCell = row.cells[5].innerText.trim();
                 const specialPriceCell = row.cells[6].innerText.trim();
                 
                 if (cardPriceCell && cardPriceCell !== '—' && !cardPriceCell.includes('Removida')) {
                     const priceVal = cardPriceCell.split('\n')[0].replace('R$ ', '');
-                    // CORREÇÃO AQUI: Texto completo "Nosso Cartão"
-                    textToCopy += ` (Nosso Cartão: R$ ${priceVal})`;
+                    textToCopy += ` (Nosso Cartão: R$ ${priceVal})`; // Texto Completo
                 }
                 if (specialPriceCell && specialPriceCell !== '—' && !specialPriceCell.includes('Removida')) {
                     const priceVal = specialPriceCell.split('\n')[0].replace('R$ ', '');
                     const label = (selectedOfferType === 'SAVEGNAGO') ? 'Save Ganhe' : 'Cliente Campeão';
-                    textToCopy += ` (${label}: R$ ${priceVal})`;
+                    textToCopy += ` (${label}: R$ ${priceVal})`; // Texto Completo
                 }
 
                 textToCopy += "\n";
