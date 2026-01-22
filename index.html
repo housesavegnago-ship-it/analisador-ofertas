@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador v10.0 - Painel de Controle</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <title>Analisador v9.12 - Anti-Quebra de Linha</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -131,8 +131,8 @@
             <div class="card p-6 md:p-8 mb-8">
                 <div class="flex justify-between items-end mb-4">
                     <div>
-                        <h1 class="text-2xl font-extrabold text-gray-900">Analisador de Ofertas v10.0</h1>
-                        <p class="text-gray-500 text-sm">Painel de Controle e Login Opcional</p>
+                        <h1 class="text-2xl font-extrabold text-gray-900">Analisador de Ofertas v9.12</h1>
+                        <p class="text-gray-500 text-sm">Anti-Quebra de Linha</p>
                     </div>
                     <button onclick="openHistory()" class="text-blue-600 hover:text-blue-800 font-bold text-sm flex items-center gap-1"><i class="fa-solid fa-list-check"></i> Histórico</button>
                 </div>
@@ -169,8 +169,7 @@
                                     <th class="px-4 py-2 text-center font-bold text-gray-600">Quantidade de Ofertas</th>
                                 </tr>
                             </thead>
-                            <tbody id="summaryTableBody" class="divide-y divide-gray-200">
-                                </tbody>
+                            <tbody id="summaryTableBody" class="divide-y divide-gray-200"></tbody>
                             <tfoot class="bg-blue-50 font-bold text-blue-800">
                                 <tr>
                                     <td class="px-4 py-2 text-right">TOTAL GERAL:</td>
@@ -187,7 +186,7 @@
 
         <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
             <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.10.0.0 (Painel de Resumo) - 2026</p>
+            <p class="mt-1">v.9.12.0 (Cola de Linhas Inteligente) - 2026</p>
         </footer>
     </div>
 
@@ -196,76 +195,38 @@
         const CITIES_PAULISTAO = ["Araraquara", "Barretos", "Campinas", "Franca", "Ribeirão Preto", "Santa Bárbara d'Oeste", "Rio Claro", "Sertãozinho"];
         let MASTER_CITIES = [];
         let selectedOfferType = null;
-        // Tenta pegar usuário, se não existir, é null (Visitante)
-        let currentUser = localStorage.getItem('appUser'); 
+        let currentUser = localStorage.getItem('appUser');
         window.globalParsedBlocks = [];
 
-        // --- LÓGICA DE LOGIN OPCIONAL ---
         function updateAuthUI() {
             const authBtn = document.getElementById('authButton');
             const userInfo = document.getElementById('userInfoContainer');
             const displayUser = document.getElementById('displayUsername');
-
             if (currentUser) {
-                // Logado
                 authBtn.textContent = "Sair";
                 authBtn.className = "text-sm font-bold border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg transition-colors";
                 userInfo.classList.remove('hidden');
                 displayUser.textContent = currentUser;
             } else {
-                // Não logado
                 authBtn.textContent = "Entrar";
                 authBtn.className = "text-sm font-bold border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors";
                 userInfo.classList.add('hidden');
             }
         }
 
-        function toggleAuth() {
-            if (currentUser) {
-                // Logout
-                if(confirm("Deseja sair?")) {
-                    localStorage.removeItem('appUser');
-                    currentUser = null;
-                    updateAuthUI();
-                }
-            } else {
-                // Abrir Login
-                toggleModal('loginModal', true);
-            }
-        }
+        function toggleAuth() { if (currentUser) { if(confirm("Deseja sair?")) { localStorage.removeItem('appUser'); currentUser = null; updateAuthUI(); } } else { toggleModal('loginModal', true); } }
 
         document.getElementById('loginButton').addEventListener('click', () => {
             const name = document.getElementById('usernameInput').value.trim();
-            if (name) {
-                currentUser = name;
-                localStorage.setItem('appUser', name);
-                updateAuthUI();
-                toggleModal('loginModal', false);
-                showToast(`Bem-vindo, ${name}!`);
-            } else {
-                showToast("Digite um nome.", "error");
-            }
+            if (name) { currentUser = name; localStorage.setItem('appUser', name); updateAuthUI(); toggleModal('loginModal', false); showToast(`Bem-vindo, ${name}!`); } else { showToast("Digite um nome.", "error"); }
         });
-
-        // Inicializa UI
         updateAuthUI();
 
-        // --- SISTEMA DE HISTÓRICO ---
         function saveToHistory(startTime, endTime, duration) {
             let demandName = document.getElementById('demandInput').value.trim() || "Sem Título";
-            // Se não tiver usuário, salva como Visitante
             const userToSave = currentUser || "Visitante";
-            
             const history = JSON.parse(localStorage.getItem('appHistory') || '[]');
-            const entry = { 
-                user: userToSave, 
-                demand: demandName, 
-                date: new Date().toLocaleDateString('pt-BR'), 
-                start: startTime.toLocaleTimeString(), 
-                end: endTime.toLocaleTimeString(), 
-                duration: duration, 
-                timestamp: new Date().getTime() 
-            };
+            const entry = { user: userToSave, demand: demandName, date: new Date().toLocaleDateString('pt-BR'), start: startTime.toLocaleTimeString(), end: endTime.toLocaleTimeString(), duration: duration, timestamp: new Date().getTime() };
             history.unshift(entry);
             localStorage.setItem('appHistory', JSON.stringify(history));
         }
@@ -274,15 +235,8 @@
             const history = JSON.parse(localStorage.getItem('appHistory') || '[]');
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
-            if (history.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Nenhum registro encontrado.</td></tr>';
-            } else {
-                history.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td class="px-4 py-3 text-sm text-center text-gray-600">${row.date}</td><td class="px-4 py-3 text-sm text-left font-bold text-gray-800">${row.demand || '-'}</td><td class="px-4 py-3 text-sm text-center text-gray-600">${row.user}</td><td class="px-4 py-3 text-sm text-center text-gray-600">${row.start}</td><td class="px-4 py-3 text-sm text-center text-gray-600">${row.end}</td><td class="px-4 py-3 text-sm text-center font-bold text-blue-600">${row.duration}</td>`;
-                    tbody.appendChild(tr);
-                });
-            }
+            if (history.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Nenhum registro encontrado.</td></tr>'; } 
+            else { history.forEach(row => { const tr = document.createElement('tr'); tr.innerHTML = `<td class="px-4 py-3 text-sm text-center text-gray-600">${row.date}</td><td class="px-4 py-3 text-sm text-left font-bold text-gray-800">${row.demand || '-'}</td><td class="px-4 py-3 text-sm text-center text-gray-600">${row.user}</td><td class="px-4 py-3 text-sm text-center text-gray-600">${row.start}</td><td class="px-4 py-3 text-sm text-center text-gray-600">${row.end}</td><td class="px-4 py-3 text-sm text-center font-bold text-blue-600">${row.duration}</td>`; tbody.appendChild(tr); }); }
             toggleModal('historyModal', true);
         }
 
@@ -321,26 +275,56 @@
             }
         });
 
-        // --- CORE LÓGICO ---
         function cleanString(str) { return str ? str.replace(/^[\s\u200B-\u200D\uFEFF•●>*-]+/, '').trim() : ''; }
         function nuclearNormalize(str) { return str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") : ""; }
         function toTitleCase(str) { if (!str) return ''; const cleaned = cleanString(str); return cleaned.toLowerCase().split(' ').map(word => { if (['e', 'de', 'da', 'do', 'dos', 'das', "d'", 'sem', 'osso', 'com', 'ao', 'em'].includes(word.toLowerCase())) return word.toLowerCase(); if (word.replace(/['’‘`]/g, "'").toLowerCase().includes("d'oeste")) return "d'Oeste"; return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(); }).join(' '); }
         function autoCorrectText(text) { if (!text) return text; text = text.replace(/\b(\d+([.,]\d+)?)\s*l\b/gi, '$1L'); text = text.replace(/\b1,5\s*-/g, '1,5L'); const dictionary = { 'muçarela': 'Mussarela', 'mussarela': 'Mussarela', 'pateko': 'Patéko', 'contra filé': 'Contrafilé', 'contra-filé': 'Contrafilé', 'contrafilé': 'Contrafilé', 'pêra': 'Pera', 'pera': 'Pera', 'tub': 'Tubo', 'tubo': 'Tubo', 'mms': 'M&Ms', 'm&m': 'M&Ms', 'm&ms': 'M&Ms', 'kilo': 'kg', 'sbp': 'SBP', 'off': 'OFF', 'on': 'ON' }; Object.keys(dictionary).forEach(key => { const regex = new RegExp(`\\b${key}\\b`, 'gi'); text = text.replace(regex, dictionary[key]); }); text = text.replace(/\bm&m\b/gi, 'M&Ms'); return text; }
         function capitalizeDescription(description) { if (!description) return ""; return description.split(' ').map(word => { if (['e', 'de', 'da', 'do', 'dos', 'das', 'com', 'sem', 'em', 'por', 'para', 'ao'].includes(word.toLowerCase())) { return word.toLowerCase(); } if (['SBP', 'OFF', 'ON', 'M&Ms', '1L', '2L', '3L', '5L', '10L', '1,5L', '1.5L', '1,3L'].includes(word)) { return word; } if (/\d/.test(word)) return word; return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(); }).join(' '); }
 
+        // --- PREPROCESS 2.0: COLA INTELIGENTE ---
         function preprocessText(text) {
             let clean = text.replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ').replace(/\t/g, ' ');
             let lines = clean.split('\n').map(l => l.trim()).filter(l => l !== '');
             let fixedLines = [];
             for (let i = 0; i < lines.length; i++) {
                 let current = lines[i];
-                current = current.replace(/^[•·*]\s*/, '');
-                const isDanglingPrice = /^([-–—:]\s*)?R\$|^[\d,.]+(\)|$)/i.test(current);
-                const isCodePrice = /^\(red\./i.test(current); 
-                const isHeaderContinuation = /^(válidas\s+para|e\s+\d{2}\/\d{2})/i.test(current);
-                if ((isDanglingPrice || isCodePrice || isHeaderContinuation) && fixedLines.length > 0) {
-                    let prev = fixedLines.pop(); fixedLines.push(prev + " " + current);
-                } else { fixedLines.push(current); }
+                current = current.replace(/^[•·*]\s*/, ''); // Remove marcadores
+
+                let shouldMerge = false;
+                if (fixedLines.length > 0) {
+                    let prev = fixedLines[fixedLines.length - 1];
+                    
+                    // CRITÉRIOS DE COLA
+                    // 1. Linha anterior não tem preço (é provavelmente um nome quebrado)
+                    //    E não parece ser um cabeçalho
+                    const prevHasPrice = /R\$|[(]red\./i.test(prev);
+                    const prevIsHeader = /(ofertas|válidas|Sextou)/i.test(prev);
+                    
+                    // 2. Linha atual começa com traço e preço, ou é preço isolado
+                    const isDanglingPrice = /^([-–—:]\s*)?R\$|^[\d,.]+(\)|$)/i.test(current);
+                    
+                    // 3. Linha anterior termina com conector
+                    const prevEndsConnector = /(Compre a|Levando|ou|e|-|–)$/i.test(prev);
+
+                    if (!prevHasPrice && !prevIsHeader) {
+                        shouldMerge = true; // Nome do produto quebrado
+                    } else if (isDanglingPrice) {
+                        shouldMerge = true; // Preço na linha de baixo
+                    } else if (prevEndsConnector) {
+                        shouldMerge = true; // Frase quebrada no meio
+                    } else if (/^(partir de|unidades pague)/i.test(current)) {
+                        shouldMerge = true; // Continuação de frase de atacado
+                    }
+                }
+
+                if (shouldMerge) {
+                    let prev = fixedLines.pop();
+                    // Remove traço duplicado na junção se existir
+                    if (prev.endsWith('-') && current.startsWith('-')) current = current.substring(1).trim();
+                    fixedLines.push(prev + " " + current);
+                } else {
+                    fixedLines.push(current);
+                }
             }
             return fixedLines;
         }
@@ -351,19 +335,38 @@
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
+
                 const mainProductMatch = line.match(/(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
-                const isSpecialPrice = line.startsWith('(') && !/^\(red\./i.test(line) || /Nosso Cartão|Save Ganhe|Cliente Campeão|Compre a partir de|qtde limite/i.test(line);
+                
+                const isSpecialPrice = line.startsWith('(') && !/^\(red\./i.test(line) || /Nosso Cartão|Save Ganhe|Cliente Campeão/i.test(line);
+
                 if (mainProductMatch && !isSpecialPrice) {
-                    const rawDesc = mainProductMatch[1].trim(); const price = mainProductMatch[2].trim(); const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); const code = codeMatch ? codeMatch[1].trim() : ''; let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc; cleanDesc = cleanDesc.replace(/^\d+\)\s*/, ''); 
+                    const rawDesc = mainProductMatch[1].trim(); const price = mainProductMatch[2].trim(); 
+                    const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); 
+                    const code = codeMatch ? codeMatch[1].trim() : ''; 
+                    let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc; 
+                    cleanDesc = cleanDesc.replace(/^\d+\)\s*/, ''); 
+
                     let extraInfo = null; let textNestaUnidade = null; let priceNestaUnidade = null;
+                    
                     if (mainProductMatch[3]) {
-                        const extraPart = mainProductMatch[3]; const atacadoMatch = extraPart.match(/Compre a partir de (\d+) unidades pague R\$ ([\d,.]+) cada/i);
-                        if (atacadoMatch) { textNestaUnidade = `Compre a partir de ${atacadoMatch[1]} unidades pague`; priceNestaUnidade = atacadoMatch[2]; } else { extraInfo = autoCorrectText(extraPart.replace(/^[-–—]\s*/, '').trim()); }
+                        const extraPart = mainProductMatch[3];
+                        const atacadoMatch = extraPart.match(/Compre a partir de (\d+) unidades pague R\$ ([\d,.]+) cada/i);
+                        if (atacadoMatch) {
+                            textNestaUnidade = `Compre a partir de ${atacadoMatch[1]} unidades pague`;
+                            priceNestaUnidade = atacadoMatch[2];
+                        } else {
+                            let cleanedExtra = extraPart.replace(/^[-–—]\s*/, '').trim();
+                            if(cleanedExtra) extraInfo = autoCorrectText(cleanedExtra);
+                        }
                     }
+
                     products.push({ code: code, description: capitalizeDescription(autoCorrectText(cleanDesc)), priceNormal: price, priceNossoCartao: null, priceSaveGanhe: null, priceClienteCampeao: null, priceNaEmbalagem: null, priceNestaUnidade: priceNestaUnidade, extraInfo: extraInfo, textNaEmbalagem: null, textNestaUnidade: textNestaUnidade });
                     pendingDescription = null; 
+
                 } else if (!isSpecialPrice && !mainProductMatch) {
                     pendingDescription = line;
+
                 } else if (isSpecialPrice) {
                     if (products.length > 0) {
                         const currentProduct = products[products.length - 1];
@@ -375,24 +378,35 @@
                             const embMatch = line.match(/\((Nesta (?:embalagem|caixa).+?) – R\$ ([\d,.]+)\)/i);
                             const levMatch = line.match(/(\((?:A partir de|Levando) \d+ unidades, pague R\$ ([\d,.]+) cada\))/i);
                             const atacadoLineMatch = line.match(/Compre a partir de (\d+) unidades pague R\$ ([\d,.]+) cada/i);
+
                             if (embMatch) { currentProduct.priceNaEmbalagem = embMatch[2]; currentProduct.textNaEmbalagem = embMatch[1]; }
                             else if (levMatch) { currentProduct.priceNestaUnidade = levMatch[2]; currentProduct.textNestaUnidade = levMatch[1].replace('(', '').replace(')', ''); }
-                            else if (atacadoLineMatch) { currentProduct.priceNestaUnidade = atacadoLineMatch[2]; currentProduct.textNestaUnidade = `Compre a partir de ${atacadoLineMatch[1]} unidades pague`; }
+                            else if (atacadoLineMatch) {
+                                currentProduct.priceNestaUnidade = atacadoLineMatch[2];
+                                currentProduct.textNestaUnidade = `Compre a partir de ${atacadoLineMatch[1]} unidades pague`;
+                            }
                             else { const infoMatch = line.match(/^\(?(.+?)\)?$/); if (infoMatch) currentProduct.extraInfo = autoCorrectText(infoMatch[1]); }
                         }
                     }
                 }
+                
                 if (pendingDescription && line.match(/R\$\s*([\d,.]+)/) && !isSpecialPrice) {
-                     const fullLine = pendingDescription + " " + line; const match = fullLine.match(/(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
+                     const fullLine = pendingDescription + " " + line; 
+                     const match = fullLine.match(/(.+?)[\s-–—:]*R\$\s*([\d,.]+)(.*)$/i);
                      if (match) {
-                        const rawDesc = match[1].trim(); const price = match[2].trim(); const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); const code = codeMatch ? codeMatch[1].trim() : ''; let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc;
+                        const rawDesc = match[1].trim(); const price = match[2].trim(); 
+                        const codeMatch = rawDesc.match(/\(red\.\s*([\d\/]+)\s*\)/i); 
+                        const code = codeMatch ? codeMatch[1].trim() : ''; 
+                        let cleanDesc = codeMatch ? rawDesc.replace(codeMatch[0], '').trim() : rawDesc;
                         products.push({ code: code, description: capitalizeDescription(autoCorrectText(cleanDesc)), priceNormal: price, priceNossoCartao: null, priceSaveGanhe: null, priceClienteCampeao: null, priceNaEmbalagem: null, priceNestaUnidade: null, extraInfo: null, textNaEmbalagem: null, textNestaUnidade: null });
-                     } pendingDescription = null;
+                     } 
+                     pendingDescription = null;
                 }
             }
             return products;
         }
 
+        // --- MANTEVE RESTO DO CÓDIGO (PARSE CITIES, ETC) ---
         function parseCities(allBlocks) {
             const excludedCitiesNuclear = new Set();
             for (let i = 1; i < allBlocks.length; i++) {
@@ -405,38 +419,6 @@
             allBlocks[0].cityList = remainingCities;
         }
 
-        // --- RENDERIZAR TABELA DE RESUMO ---
-        function renderSummaryTable() {
-            const container = document.getElementById('summaryContainer');
-            const tbody = document.getElementById('summaryTableBody');
-            const totalEl = document.getElementById('summaryTotalCount');
-            
-            tbody.innerHTML = '';
-            let totalGeneral = 0;
-
-            if (window.globalParsedBlocks.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-
-            window.globalParsedBlocks.forEach((block, index) => {
-                const count = block.products.length;
-                totalGeneral += count;
-                
-                const title = (index === 0) ? "Lista Geral" : `Lista ${index} (${formatCityDisplayList(block.cityList)})`;
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-4 py-2 text-gray-800 border-b">${title}</td>
-                    <td class="px-4 py-2 text-center font-bold text-blue-600 border-b">${count}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            totalEl.textContent = totalGeneral;
-            container.classList.remove('hidden');
-        }
-
         document.getElementById('selectSavegnago').addEventListener('click', () => { selectedOfferType = 'SAVEGNAGO'; MASTER_CITIES = CITIES_SAVEGNAGO; document.getElementById('parseButton').className = "btn btn-savegnago w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://savegnagoio.vtexassets.com/assets/vtex/assets-builder/savegnagoio.store-theme/14.0.36/home/logo-save___ee8753fa9fd1e21018b817a0d020549f.png"; toggleModal('listTypeModal', false); });
         document.getElementById('selectPaulistao').addEventListener('click', () => { selectedOfferType = 'PAULISTAO'; MASTER_CITIES = CITIES_PAULISTAO; document.getElementById('parseButton').className = "btn btn-paulistao w-full sm:w-auto"; document.getElementById('headerLogo').src = "https://paulistaoatacadista.vtexassets.com/assets/vtex.file-manager-graphql/images/91d1697e-7efa-471e-b763-68b8b71430b2___db630f93263bf9ecc924c4493e2279f9.png"; toggleModal('listTypeModal', false); });
 
@@ -446,18 +428,37 @@
             if (!selectedOfferType) { toggleModal('listTypeModal', true); return; }
             try {
                 btn.disabled = true; spinner.classList.remove('hidden'); container.innerHTML = ''; window.globalParsedBlocks = []; await new Promise(r => setTimeout(r, 300)); 
-                const fixedLines = preprocessText(text); let blocks = []; let currentBlockLines = []; let hasHeader = false;
-                fixedLines.forEach(line => { const isHeader = /[A-ZÁÉÍÓÚÂÊÔÃÕÇ\s,]+[-–—]\s*OFERTAS VÁLIDAS/i.test(line); if (isHeader) { if (currentBlockLines.length > 0) blocks.push({ lines: currentBlockLines, hasHeader: hasHeader }); currentBlockLines = [line]; hasHeader = true; } else { currentBlockLines.push(line); } });
+                
+                const fixedLines = preprocessText(text); 
+                let blocks = []; 
+                let currentBlockLines = []; 
+                let hasHeader = false;
+
+                fixedLines.forEach(line => { 
+                    const isHeader = /[A-ZÁÉÍÓÚÂÊÔÃÕÇ\s,]+[-–—]\s*OFERTAS VÁLIDAS/i.test(line); 
+                    if (isHeader) { 
+                        if (currentBlockLines.length > 0) blocks.push({ lines: currentBlockLines, hasHeader: hasHeader }); 
+                        currentBlockLines = [line]; hasHeader = true; 
+                    } else { currentBlockLines.push(line); } 
+                });
                 if (currentBlockLines.length > 0) blocks.push({ lines: currentBlockLines, hasHeader: hasHeader });
-                blocks.forEach((blockData, idx) => { let lines = blockData.lines; let header = ""; let locationTitle = "LISTA GERAL"; let productsStartIdx = 0; if (blockData.hasHeader) { header = lines[0]; locationTitle = header; productsStartIdx = 1; } else if (idx === 0) { if (lines[0] && lines[0].toUpperCase().includes('OFERTAS VÁLIDAS')) { header = lines[0]; productsStartIdx = 1; } } const productLines = lines.slice(productsStartIdx); const products = parseProductBlock(productLines); if (products.length > 0) { window.globalParsedBlocks.push({ header: header, locationTitle: locationTitle, cityList: [], products: products }); } });
+
+                blocks.forEach((blockData, idx) => { 
+                    let lines = blockData.lines; let header = ""; let locationTitle = "LISTA GERAL"; let productsStartIdx = 0; 
+                    if (blockData.hasHeader) { 
+                        header = lines[0]; locationTitle = header; productsStartIdx = 1; 
+                    } else if (idx === 0) { 
+                        if (lines[0] && lines[0].toUpperCase().includes('OFERTAS VÁLIDAS')) { header = lines[0]; productsStartIdx = 1; } 
+                    } 
+                    const productLines = lines.slice(productsStartIdx); 
+                    const products = parseProductBlock(productLines); 
+                    if (products.length > 0) { window.globalParsedBlocks.push({ header: header, locationTitle: locationTitle, cityList: [], products: products }); } 
+                });
                 
                 if (window.globalParsedBlocks.length === 0) { showToast("Nenhum produto identificado. Verifique o texto.", "error"); } 
                 else { 
                     if (window.globalParsedBlocks.length > 0) parseCities(window.globalParsedBlocks); 
-                    
-                    // CHAMA A FUNÇÃO DO RESUMO
                     renderSummaryTable();
-
                     window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); }); 
                     showToast("Análise concluída!"); 
                 }
@@ -466,7 +467,7 @@
 
         document.getElementById('clearButton').addEventListener('click', () => { document.getElementById('inputText').value = ''; document.getElementById('resultsContainer').innerHTML = ''; document.getElementById('summaryContainer').classList.add('hidden'); window.globalParsedBlocks = []; showToast("Campos limpos!"); });
 
-        // ... (Funções UI e Helpers mantidas)
+        // ... (UI Functions)
         function showToast(message, type = 'success') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast-message ${type}`; toast.innerHTML = `<span>${message}</span>`; container.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
         function toggleModal(modalId, show) { const modal = document.getElementById(modalId); if (modal) { if (show) modal.classList.add('visible'); else modal.classList.remove('visible'); } }
         function copyAndAnimate(text, elementId) { navigator.clipboard.writeText(text).then(() => { const el = document.getElementById(elementId); if(el) { el.style.textDecoration = 'line-through'; el.classList.add('text-gray-400'); } showToast("Texto copiado!"); }); }
@@ -508,6 +509,23 @@
 
         function reorderAllTables() { const table0 = document.getElementById('table-0'); if (!table0) return; const rows0 = Array.from(table0.querySelectorAll('tbody tr')); const orderMap = {}; rows0.forEach(row => { const input = row.querySelector('.order-input'); const key = row.dataset.key; if (input && input.value !== '') orderMap[key] = parseInt(input.value); else orderMap[key] = 999999; }); window.globalParsedBlocks.forEach((block) => { block.products.sort((a, b) => { const keyA = (a.code || a.description).replace(/"/g, '&quot;'); const keyB = (b.code || b.description).replace(/"/g, '&quot;'); const orderA = orderMap.hasOwnProperty(keyA) ? orderMap[keyA] : 999999; const orderB = orderMap.hasOwnProperty(keyB) ? orderMap[keyB] : 999999; if (orderA !== orderB) return orderA - orderB; return a.description.localeCompare(b.description); }); }); const container = document.getElementById('resultsContainer'); container.innerHTML = ''; window.globalParsedBlocks.forEach((block, index) => { renderResultsTable(block.products, container, block.locationTitle, block.cityList, index); }); const newRows0 = document.getElementById('table-0').querySelectorAll('tbody tr'); newRows0.forEach(row => { const key = row.dataset.key; if (orderMap[key] !== 999999) row.querySelector('.order-input').value = orderMap[key]; }); showToast("Todas as listas foram reordenadas!"); }
         function exportToExcel(blockIndex) { const table = document.getElementById(`table-${blockIndex}`); if (!table) return; const wb = XLSX.utils.table_to_book(table, {sheet: "Ofertas"}); let suffix = ""; if (blockIndex > 0) { const rows = table.querySelectorAll('tbody tr').length; if(rows > 0) suffix = "_COM_ALTERACOES"; } XLSX.writeFile(wb, `Ofertas_${selectedOfferType}_Lista_${blockIndex}${suffix}.xlsx`); }
+        function renderSummaryTable() {
+            const container = document.getElementById('summaryContainer');
+            const tbody = document.getElementById('summaryTableBody');
+            const totalEl = document.getElementById('summaryTotalCount');
+            tbody.innerHTML = '';
+            let totalGeneral = 0;
+            if (window.globalParsedBlocks.length === 0) { container.classList.add('hidden'); return; }
+            window.globalParsedBlocks.forEach((block, index) => {
+                const count = block.products.length; totalGeneral += count;
+                const title = (index === 0) ? "Lista Geral" : `Lista ${index} (${formatCityDisplayList(block.cityList)})`;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="px-4 py-2 text-gray-800 border-b">${title}</td><td class="px-4 py-2 text-center font-bold text-blue-600 border-b">${count}</td>`;
+                tbody.appendChild(tr);
+            });
+            totalEl.textContent = totalGeneral;
+            container.classList.remove('hidden');
+        }
         function renderResultsTable(products, resultsContainer, locationTitle, cityList, blockIndex) { const blockContainer = document.createElement('div'); blockContainer.className = 'mb-10'; let buttonsHtml = ''; if (blockIndex === 0) { buttonsHtml += `<button onclick="reorderAllTables()" class="btn btn-warning py-2 px-3 text-sm"><i class="fa-solid fa-arrow-down-1-9"></i> Reordenar Todas</button>`; } buttonsHtml += `<button onclick="copyTextList(${blockIndex})" class="btn btn-copy py-2 px-3 text-sm"><i class="fa-solid fa-clipboard-list"></i> Copiar Lista</button>`; buttonsHtml += `<button onclick="exportToExcel(${blockIndex})" class="btn btn-excel py-2 px-3 text-sm"><i class="fa-solid fa-file-excel"></i> Excel</button>`; const formattedCities = formatCityDisplayList(cityList); let displayTitle = (blockIndex === 0) ? "LISTA GERAL (RESTANTE)" : `LISTA ESPECÍFICA ${blockIndex}`; const citiesHtml = formattedCities ? `<div class="bg-gray-50 p-2 rounded border border-gray-100 mt-2 flex justify-between items-start gap-2"><p class="text-sm text-gray-600 font-medium" id="cities-text-${blockIndex}"><i class="fa-solid fa-map-pin text-red-500 mr-1"></i> ${formattedCities}</p><button onclick="copyCitiesText('cities-text-${blockIndex}')" class="text-gray-400 hover:text-blue-600 text-sm whitespace-nowrap" title="Copiar cidades"><i class="fa-regular fa-copy"></i> Copiar</button></div>` : '<p class="text-sm text-red-500 mt-2 font-medium italic"><i class="fa-solid fa-triangle-exclamation"></i> Nenhuma cidade identificada.</p>'; const headerHtml = `<div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-4"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><div><h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">${displayTitle} ${blockIndex === 0 ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Automático</span>' : ''}</h2>${citiesHtml}</div><div class="flex gap-2 self-end md:self-center">${buttonsHtml}</div></div></div>`; blockContainer.innerHTML = headerHtml; const tableContainer = document.createElement('div'); tableContainer.className = 'overflow-x-auto card'; const orderHeader = blockIndex === 0 ? '<th class="px-4 py-3 text-center w-16 text-xs font-bold text-gray-600 uppercase">Ordem</th>' : '<th class="px-4 py-3 text-center w-10 text-xs font-bold text-gray-600 uppercase">#</th>'; let specialColumnHeader = (selectedOfferType === 'SAVEGNAGO') ? '<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Save Ganhe</th>' : '<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Cliente Campeão</th>'; let tableHtml = `<table class="min-w-full" id="table-${blockIndex}"><thead class="bg-gray-50 sticky-header"><tr><th class="px-4 py-3 text-center w-10"><i class="fa-solid fa-check"></i></th>${orderHeader}<th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Código / Link</th><th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Descrição</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Preço Normal</th><th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nosso Cartão</th>${specialColumnHeader}<th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Info Extra</th></tr></thead><tbody class="divide-y divide-gray-200">`;
             let visibleRowsCount = 0; const refBlock = window.globalParsedBlocks.length > 0 ? window.globalParsedBlocks[0] : null; products.forEach((product, idx) => { const descId = `desc-${blockIndex}-${idx}`; const extraId = `extra-${blockIndex}-${idx}`; const rowClass = (visibleRowsCount % 2 === 0) ? 'bg-white' : 'bg-gray-50'; const rawKey = product.code || product.description || `item-${idx}`; const safeKey = rawKey.replace(/"/g, '&quot;'); let showRow = true; let descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}">${product.description}</span><i class="fa-regular fa-copy text-gray-300"></i></div>`; let normalPriceContent = product.priceNormal ? formatPrice(product.priceNormal) : '<span class="text-[10px] text-gray-500 italic leading-tight block">Sem preço<br>informado</span>'; let cellClassCard = "bg-blue-50 text-blue-900 border-x border-blue-100"; let cellClassSpecial = (selectedOfferType === 'SAVEGNAGO') ? "bg-pink-50 text-pink-900 border-x border-pink-100" : "bg-red-50 text-red-900 border-x border-red-100"; let cardPriceContent = formatPrice(product.priceNossoCartao); let specialPriceValue = (selectedOfferType === 'SAVEGNAGO') ? (product.priceSaveGanhe || '-') : (product.priceClienteCampeao || '-'); let specialPriceContent = specialPriceValue !== '-' ? formatPrice(specialPriceValue) : '-'; if (blockIndex > 0) { const refProduct = refBlock && refBlock.products[idx]; let isDifferent = false; if (!refProduct) { isDifferent = true; descContent = `<div class="flex justify-between items-center gap-2"><span id="${descId}" class="text-green-700 font-bold">${product.description} <span class="text-xs bg-green-200 px-1 rounded ml-1">NOVO</span></span><i class="fa-regular fa-copy text-gray-300"></i></div>`; } else { if (product.description !== refProduct.description) { isDifferent = true; descContent = `<div class="flex flex-col gap-1"><span id="${descId}" class="text-red-600 font-bold">${product.description}</span><span class="text-[10px] text-red-500 line-through">Era: ${refProduct.description}</span></div>`; } if (product.priceNormal !== refProduct.priceNormal) { isDifferent = true; let newP = product.priceNormal ? formatPrice(product.priceNormal) : '<span class="text-[10px] text-gray-500 italic">Sem preço</span>'; let oldP = refProduct.priceNormal ? formatPrice(refProduct.priceNormal) : 'Sem preço'; normalPriceContent = `<div class="text-red-600 font-bold">${newP}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${oldP}</div>`; } if (product.priceNossoCartao !== refProduct.priceNossoCartao) { isDifferent = true; if(product.priceNossoCartao && !refProduct.priceNossoCartao) cardPriceContent = `<div class="text-green-700 font-bold">${formatPrice(product.priceNossoCartao)}</div><div class="text-[10px] text-green-600 mt-0.5 font-bold">Adicionada</div>`; else if(product.priceNossoCartao) cardPriceContent = `<div class="text-red-600 font-bold">${formatPrice(product.priceNossoCartao)}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${formatPrice(refProduct.priceNossoCartao)}</div>`; else cardPriceContent = `<span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Removida</span>`; } let refSpecial = (selectedOfferType === 'SAVEGNAGO') ? refProduct.priceSaveGanhe : refProduct.priceClienteCampeao; let currentSpec = (selectedOfferType === 'SAVEGNAGO') ? product.priceSaveGanhe : product.priceClienteCampeao; let refSpec = (selectedOfferType === 'SAVEGNAGO') ? refProduct.priceSaveGanhe : refProduct.priceClienteCampeao; if (currentSpec !== refSpec) { isDifferent = true; if(currentSpec && !refSpec) specialPriceContent = `<div class="text-green-700 font-bold">${formatPrice(currentSpec)}</div><div class="text-[10px] text-green-600 mt-0.5 font-bold">Adicionada</div>`; else if(currentSpec) specialPriceContent = `<div class="text-red-600 font-bold">${formatPrice(currentSpec)}</div><div class="text-[10px] text-red-500 mt-0.5">Era: ${formatPrice(refSpec)}</div>`; else specialPriceContent = `<span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Removida</span>`; } } if (!isDifferent) showRow = false; } if (showRow) { visibleRowsCount++; const orderCell = blockIndex === 0 ? `<input type="number" class="order-input" placeholder="#">` : `<span class="text-gray-400 text-xs">${idx + 1}</span>`; 
                 let extraContent = '<span class="text-gray-300">-</span>';
