@@ -1,247 +1,288 @@
 <!DOCTYPE html>
-<html lang="pt-BR" style="font-size: 16px;">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador v13.1 - Fusion (IA + Layout Clássico)</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
-    
+    <title>Analisador v13.2 - Fusion Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        :root { --cor-primaria: #ef4444; --cor-secundaria: #3b82f6; --cor-fundo: #f8fafc; --cor-texto-principal: #1f2937; --cor-borda: #e5e7eb; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-principal); }
-        .spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid #fff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .card { background-color: #ffffff; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid var(--cor-borda); }
-        .btn { font-weight: 700; padding: 0.75rem 1.5rem; border-radius: 0.75rem; transition: all 0.3s ease; outline: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .btn-savegnago { background-color: #2563eb; color: #fff; } .btn-savegnago:hover { background-color: #1d4ed8; }
-        .btn-paulistao { background-color: #dc2626; color: #fff; } .btn-paulistao:hover { background-color: #b91c1c; }
-        .btn-neutral { background-color: #e5e7eb; color: #374151; } 
-        .btn-warning { background-color: #f59e0b; color: #fff; } .btn-warning:hover { background-color: #d97706; }
-        .btn-timer { background-color: #8b5cf6; color: #fff; } .btn-timer:hover { background-color: #7c3aed; }
-        .btn-timer-active { background-color: #f97316; color: #fff; } .btn-timer-active:hover { background-color: #ea580c; }
-        .btn-copy { background-color: #16a34a; color: #fff; } .btn-copy:hover { background-color: #15803d; }
-        .btn-excel { background-color: #16a34a; color: #fff; }
-        .btn-pdf { background-color: #dc2626; color: #fff; } .btn-pdf:hover { background-color: #b91c1c; }
-        .modal-overlay { position: fixed; inset: 0; background-color: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
-        .modal-overlay.visible { display: flex; opacity: 1; pointer-events: auto; }
-        .modal-content { animation: fadeIn 0.3s ease forwards; width: 100%; max-width: 500px; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        #toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem; }
-        .toast-message { padding: 0.75rem 1.25rem; border-radius: 0.75rem; color: white; font-weight: 600; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); display: flex; align-items: center; gap: 0.75rem; }
-        .toast-message.success { background-color: #22c55e; } .toast-message.error { background-color: #ef4444; }
-        .sticky-header { position: sticky; top: 0; z-index: 10; background-color: #f9fafb; }
-        tr.row-completed { background-color: #dcfce7 !important; } tr.row-completed td { color: #166534; }
-        .order-input { width: 50px; text-align: center; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.25rem; }
-        .sku-link { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 0.75rem; font-weight: 600; transition: background-color 0.2s; cursor: pointer; text-decoration: none;}
-        .sku-link:hover { background-color: #bfdbfe; }
-        .sku-link.visited-sku { background-color: #fee2e2 !important; color: #dc2626 !important; border: 1px solid #fecaca; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1f2937; transition: background-color 0.3s; }
+        
+        /* Tema Savegnago (Padrão) */
+        body.theme-savegnago { --color-brand: #2563eb; --color-brand-hover: #1d4ed8; --color-light: #eff6ff; --color-text-brand: #1e40af; }
+        /* Tema Paulistão */
+        body.theme-paulistao { --color-brand: #dc2626; --color-brand-hover: #b91c1c; --color-light: #fef2f2; --color-text-brand: #991b1b; }
+
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        
+        .btn { font-weight: 700; transition: all 0.2s; border-radius: 8px; cursor: pointer; display: inline-flex; items-center; justify-content: center; gap: 0.5rem; }
+        .btn:hover { transform: translateY(-1px); filter: brightness(110%); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-brand { background-color: var(--color-brand); color: white; }
+        .btn-brand:hover { background-color: var(--color-brand-hover); }
+        
+        .btn-copy { background-color: #10b981; color: white; }
+        .btn-excel { background-color: #16a34a; color: white; }
+        .btn-neutral { background-color: white; border: 1px solid #d1d5db; color: #374151; }
+        .btn-neutral:hover { background-color: #f9fafb; border-color: #9ca3af; }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+        .modal.open { display: flex; opacity: 1; pointer-events: auto; }
+        
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Company Switcher Button */
+        #companySwitcher { min-width: 220px; justify-content: space-between; padding-left: 1rem; padding-right: 1rem; border: 2px solid transparent; }
+        body.theme-savegnago #companySwitcher { background-color: white; border-color: #2563eb; color: #2563eb; }
+        body.theme-paulistao #companySwitcher { background-color: white; border-color: #dc2626; color: #dc2626; }
+
+        /* Badges */
+        .badge { padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-bottom: 2px; }
+        .badge-brand { background-color: var(--color-light); color: var(--color-text-brand); border: 1px solid var(--color-brand); opacity: 0.8; }
+        
+        .sticky-header { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; }
+        tr.row-completed { background-color: #dcfce7 !important; }
+        .sku-link { color: var(--color-brand); text-decoration: none; font-weight: bold; font-family: monospace; }
+        .sku-link:hover { text-decoration: underline; }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="theme-savegnago p-4 md:p-6 min-h-screen flex flex-col">
 
-    <div id="loginModal" class="modal-overlay p-4" style="z-index: 2000;">
-        <div class="modal-content card p-8 text-center relative">
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+            <div>
+                <h1 class="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+                    <i class="fa-solid fa-brain" style="color: var(--color-brand);"></i> Analisador v13.2
+                </h1>
+                <p class="text-xs text-gray-400">IA Powered (Gemini 2.0)</p>
+            </div>
+
+            <button id="companySwitcher" onclick="toggleCompany()" class="btn py-2 text-sm shadow-sm" title="Clique para trocar de rede">
+                <span id="companyName" class="font-black text-lg">SAVEGNAGO</span>
+                <i class="fa-solid fa-repeat"></i>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+            <div id="userInfoContainer" class="hidden text-right mr-2">
+                <p class="text-[10px] text-gray-400 uppercase font-bold">Logado</p>
+                <p id="displayUsername" class="font-bold text-gray-700 text-sm leading-tight">Visitante</p>
+            </div>
+            
+            <button id="authButton" onclick="toggleAuth()" class="btn btn-neutral px-3 py-2 text-sm">Entrar</button>
+            <button onclick="openConfigModal()" class="btn btn-neutral px-3 py-2 text-gray-500 hover:text-blue-600" title="Configurar API"><i class="fa-solid fa-gear"></i></button>
+            <button onclick="openHistory()" class="btn btn-neutral px-3 py-2 text-blue-600 font-bold"><i class="fa-solid fa-clock-rotate-left"></i></button>
+        </div>
+    </header>
+
+    <div id="configModal" class="modal">
+        <div class="bg-white p-8 rounded-xl w-full max-w-md shadow-2xl relative animate-[fadeIn_0.3s_ease-out]">
+            <button onclick="closeConfigModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            
+            <div class="text-center mb-6">
+                <div class="inline-block p-3 rounded-full bg-blue-50 text-blue-600 mb-3"><i class="fa-solid fa-key text-2xl"></i></div>
+                <h2 class="text-2xl font-bold text-gray-800">Configurar API</h2>
+                <p class="text-sm text-gray-500">Insira sua chave do Google Gemini para ativar o cérebro da IA.</p>
+            </div>
+            
+            <label class="block text-xs font-bold text-gray-600 uppercase mb-1 ml-1">Sua API Key</label>
+            <input type="password" id="apiKeyInput" class="w-full p-3 border border-gray-300 rounded-lg mb-6 font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Cole aqui (começa com AIza...)">
+            
+            <button onclick="saveApiKey()" class="btn btn-brand w-full py-3 text-lg shadow-lg">Salvar e Ativar</button>
+        </div>
+    </div>
+
+    <div id="loginModal" class="modal">
+        <div class="bg-white p-8 rounded-xl w-full max-w-sm text-center shadow-2xl relative">
             <button onclick="toggleModal('loginModal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <div class="text-6xl mb-4">👋</div>
+            <div class="text-5xl mb-4">👋</div>
             <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Quem é você?</h2>
             <input type="text" id="usernameInput" class="w-full p-3 border border-gray-300 rounded-lg mb-4 text-center font-bold" placeholder="Seu Nome">
-            <button id="loginButton" class="btn btn-savegnago w-full">Entrar</button>
+            <button id="loginButton" class="btn btn-brand w-full py-2">Entrar</button>
         </div>
     </div>
 
-    <div id="configModal" class="modal-overlay p-4">
-        <div class="modal-content card p-8 text-center relative">
-            <button onclick="toggleModal('configModal', false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h2 class="text-xl font-bold mb-4">Configurar Inteligência Artificial</h2>
-            <p class="text-sm text-gray-500 mb-4">Cole sua chave API do Google Gemini abaixo.</p>
-            <input type="password" id="apiKeyInput" class="w-full p-3 border rounded-lg mb-4 font-mono text-sm" placeholder="AIzaSy...">
-            <button onclick="saveApiKey()" class="btn btn-copy w-full">Salvar Chave</button>
-        </div>
-    </div>
-
-    <div id="listTypeModal" class="modal-overlay p-4 visible">
-        <div class="modal-content card p-6 md:p-8 text-center">
-            <h2 class="text-2xl font-extrabold text-gray-900 mb-4">Qual rede você deseja analisar?</h2>
-            <div class="flex flex-col space-y-4">
-                <button id="selectSavegnago" class="btn btn-savegnago">Savegnago Supermercados</button>
-                <button id="selectPaulistao" class="btn btn-paulistao">Paulistão Atacadista</button>
+    <main class="flex-grow max-w-7xl mx-auto w-full">
+        <div class="card p-6 mb-8">
+            <div class="flex justify-between items-center mb-3">
+                <input type="text" id="demandInput" class="flex-grow mr-4 p-2 border-b border-gray-300 focus:border-blue-500 outline-none bg-transparent font-medium text-gray-700 placeholder-gray-400" placeholder="Nome da Demanda (Opcional)">
+                <button onclick="clearAll()" class="text-xs text-red-400 hover:text-red-600 font-bold uppercase tracking-wide"><i class="fa-solid fa-trash-can"></i> Limpar</button>
+            </div>
+            
+            <textarea id="inputText" class="w-full h-56 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-opacity-50 text-sm font-mono mb-4 resize-y bg-gray-50 focus:bg-white transition-colors" placeholder="Cole o texto das ofertas aqui..."></textarea>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="analyzeBtn" onclick="analyzeWithAI()" class="btn btn-brand py-3 text-lg shadow-md">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Analisar com IA</span>
+                    <div id="loadingSpinner" class="spinner hidden"></div>
+                </button>
+                <button id="timerButton" class="btn btn-neutral py-3 text-gray-700 font-bold">
+                    <i class="fa-solid fa-stopwatch"></i> <span id="timerButtonText">Cronômetro</span>
+                    <span id="liveTimer" class="ml-2 font-mono hidden">00:00:00</span>
+                </button>
             </div>
         </div>
-    </div>
 
-    <div id="historyModal" class="modal-overlay p-4">
-        <div class="modal-content card p-6 max-w-6xl h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Histórico</h2>
-                <button onclick="toggleModal('historyModal', false)" class="text-gray-500 hover:text-red-500 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        <div id="summaryContainer" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             </div>
-            <div class="overflow-y-auto flex-grow border rounded-lg">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 sticky top-0">
+
+        <div id="resultsContainer" class="space-y-8"></div>
+    </main>
+
+    <div id="historyModal" class="modal">
+        <div class="bg-white p-6 rounded-xl w-full max-w-5xl h-[80vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                <h2 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-clock-rotate-left text-gray-400"></i> Histórico</h2>
+                <button onclick="toggleModal('historyModal', false)" class="text-gray-400 hover:text-red-500 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-grow">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-600 sticky top-0">
                         <tr>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase">Data</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase">Rede</th>
-                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">Demanda</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase">Usuário</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase">Tempo</th>
+                            <th class="px-4 py-3">Data</th>
+                            <th class="px-4 py-3">Rede</th>
+                            <th class="px-4 py-3">Demanda</th>
+                            <th class="px-4 py-3">Usuário</th>
+                            <th class="px-4 py-3 text-right">Tempo</th>
                         </tr>
                     </thead>
-                    <tbody id="historyTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                    <tbody id="historyTableBody" class="divide-y divide-gray-200"></tbody>
                 </table>
             </div>
-            <div class="mt-4 flex justify-between items-center">
-                <button onclick="clearHistory()" class="text-red-500 text-sm hover:underline">Limpar</button>
-                <button onclick="exportHistoryToPDF()" class="btn btn-pdf py-2 px-4 text-sm"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            <div class="mt-4 pt-4 border-t flex justify-between">
+                <button onclick="clearHistory()" class="text-red-500 text-xs hover:underline">Limpar tudo</button>
+                <button onclick="exportHistoryToPDF()" class="btn btn-neutral py-1 px-3 text-xs"><i class="fa-solid fa-download"></i> Baixar PDF</button>
             </div>
         </div>
     </div>
 
     <div id="toast-container"></div>
 
-    <div class="container mx-auto p-4 md:p-6 max-w-[95%] min-h-screen flex flex-col">
-        <header class="text-center py-6 mb-6 flex flex-col justify-center items-center relative gap-4">
-            <div class="absolute top-0 right-0 flex items-center gap-3">
-                <button onclick="openConfigModal()" class="text-xs text-gray-400 hover:text-blue-500 font-bold border border-gray-200 px-2 py-1 rounded"><i class="fa-solid fa-key"></i> API</button>
-                <div id="userInfoContainer" class="hidden text-right sm:block">
-                    <p class="text-xs text-gray-400 uppercase font-bold">Usuário</p>
-                    <p id="displayUsername" class="font-bold text-gray-700">Visitante</p>
-                </div>
-                <button id="authButton" onclick="toggleAuth()" class="text-sm font-bold border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors">Entrar</button>
-            </div>
-            <img id="headerLogo" src="" alt="Logo Rede" class="h-12 md:h-16 inverted">
-        </header>
-
-        <main class="flex-grow">
-            <div class="card p-6 md:p-8 mb-8">
-                <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <h1 class="text-2xl font-extrabold text-gray-900">Analisador de Ofertas v13.1</h1>
-                        <p class="text-gray-500 text-sm">Visual Clássico + Motor IA (Gemini 2.0)</p>
-                    </div>
-                    <button onclick="openHistory()" class="text-blue-600 hover:text-blue-800 font-bold text-sm flex items-center gap-1"><i class="fa-solid fa-list-check"></i> Histórico</button>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="demandInput" class="block text-xs font-bold text-gray-600 uppercase mb-1 ml-1">Nome da Demanda</label>
-                    <input type="text" id="demandInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 font-medium placeholder-gray-400 transition-all hover:border-blue-300" placeholder="Ex: Lâmina FDS...">
-                </div>
-
-                <textarea id="inputText" class="w-full h-60 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="Cole aqui o texto das ofertas..."></textarea>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    <button id="parseButton" class="btn btn-neutral hover:bg-gray-300"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="buttonText">Analisar com IA</span><div id="loadingSpinner" class="spinner hidden"></div></button>
-                    <button id="timerButton" class="btn btn-timer"><i class="fa-solid fa-stopwatch"></i><span id="timerButtonText">Iniciar Timer</span></button>
-                    <button id="clearButton" class="btn btn-neutral"><i class="fa-solid fa-trash-can"></i> Limpar</button>
-                </div>
-
-                <div id="liveTimerContainer" class="hidden text-center bg-gray-50 border border-gray-200 rounded p-2 mb-4">
-                    <span class="text-gray-500 text-xs uppercase font-bold tracking-wider">Tempo Decorrido</span>
-                    <div id="liveTimer" class="text-2xl font-mono font-bold text-gray-800">00:00:00</div>
-                </div>
-
-                <div id="timerLog" class="space-y-2"></div>
-            </div>
-
-            <div id="summaryContainer" class="mb-8 hidden">
-                <div class="card p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-chart-simple mr-2"></i>Resumo da Análise</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-2 text-left font-bold text-gray-600">Local / Lista</th>
-                                    <th class="px-4 py-2 text-center font-bold text-gray-600">Quantidade de Ofertas</th>
-                                </tr>
-                            </thead>
-                            <tbody id="summaryTableBody" class="divide-y divide-gray-200"></tbody>
-                            <tfoot class="bg-blue-50 font-bold text-blue-800">
-                                <tr>
-                                    <td class="px-4 py-2 text-right">TOTAL GERAL:</td>
-                                    <td class="px-4 py-2 text-center" id="summaryTotalCount">0</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="resultsContainer"></div>
-        </main>
-
-        <footer class="text-center mt-12 py-6 text-gray-500 text-sm border-t border-gray-200">
-            <p>Criador: Luan Candido | Programado por: Rendrix Oliveira - Grupo Savegnago</p>
-            <p class="mt-1">v.13.1.0 (IA Pro + Layout Clássico) - 2026</p>
-        </footer>
-    </div>
-
     <script>
-        // --- SETUP INICIAL ---
+        // --- ESTADO GLOBAL ---
         let API_KEY = localStorage.getItem('gemini_api_key');
-        const MODEL_NAME = 'gemini-2.0-flash'; // Modelo Pro que funcionou
-        let selectedOfferType = null;
-        let currentUser = localStorage.getItem('appUser');
-        window.globalParsedBlocks = [];
+        let SELECTED_COMPANY = localStorage.getItem('selected_company') || 'SAVEGNAGO';
+        let CURRENT_USER = localStorage.getItem('appUser');
+        const MODEL_NAME = 'gemini-2.0-flash'; // Modelo Pro configurado
+        window.parsedData = [];
 
-        // Check API
-        if(!API_KEY) setTimeout(() => toggleModal('configModal', true), 500);
-
-        // --- AUTH UI ---
-        function updateAuthUI() {
-            const authBtn = document.getElementById('authButton');
-            const userInfo = document.getElementById('userInfoContainer');
-            const displayUser = document.getElementById('displayUsername');
-            if (currentUser) {
-                authBtn.textContent = "Sair";
-                authBtn.className = "text-sm font-bold border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg transition-colors";
-                userInfo.classList.remove('hidden');
-                displayUser.textContent = currentUser;
-            } else {
-                authBtn.textContent = "Entrar";
-                authBtn.className = "text-sm font-bold border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors";
-                userInfo.classList.add('hidden');
+        // --- INICIALIZAÇÃO ---
+        applyTheme(SELECTED_COMPANY);
+        updateAuthUI();
+        
+        // --- LÓGICA DE EMPRESA ---
+        function toggleCompany() {
+            SELECTED_COMPANY = (SELECTED_COMPANY === 'SAVEGNAGO') ? 'PAULISTAO' : 'SAVEGNAGO';
+            localStorage.setItem('selected_company', SELECTED_COMPANY);
+            applyTheme(SELECTED_COMPANY);
+            
+            // Se já tiver dados na tela, re-renderiza para atualizar links e cores
+            if (window.parsedData.length > 0) {
+                renderAllTables();
             }
         }
-        function toggleAuth() { if (currentUser) { if(confirm("Sair?")) { localStorage.removeItem('appUser'); currentUser = null; updateAuthUI(); } } else { toggleModal('loginModal', true); } }
-        document.getElementById('loginButton').addEventListener('click', () => { const name = document.getElementById('usernameInput').value.trim(); if (name) { currentUser = name; localStorage.setItem('appUser', name); updateAuthUI(); toggleModal('loginModal', false); showToast(`Bem-vindo, ${name}!`); } });
-        updateAuthUI();
 
-        // --- SELEÇÃO DE LOJA (VISUAL) ---
-        document.getElementById('selectSavegnago').addEventListener('click', () => { 
-            selectedOfferType = 'SAVEGNAGO'; 
-            document.getElementById('parseButton').className = "btn btn-savegnago w-full sm:w-auto"; 
-            document.getElementById('headerLogo').src = "https://savegnagoio.vtexassets.com/assets/vtex/assets-builder/savegnagoio.store-theme/14.0.36/home/logo-save___ee8753fa9fd1e21018b817a0d020549f.png"; 
-            toggleModal('listTypeModal', false); 
-        });
-        document.getElementById('selectPaulistao').addEventListener('click', () => { 
-            selectedOfferType = 'PAULISTAO'; 
-            document.getElementById('parseButton').className = "btn btn-paulistao w-full sm:w-auto"; 
-            document.getElementById('headerLogo').src = "https://paulistaoatacadista.vtexassets.com/assets/vtex.file-manager-graphql/images/91d1697e-7efa-471e-b763-68b8b71430b2___db630f93263bf9ecc924c4493e2279f9.png"; 
-            toggleModal('listTypeModal', false); 
+        function applyTheme(company) {
+            const body = document.body;
+            const label = document.getElementById('companyName');
+            const logo = document.getElementById('headerLogo');
+
+            if (company === 'SAVEGNAGO') {
+                body.classList.remove('theme-paulistao');
+                body.classList.add('theme-savegnago');
+                label.textContent = "SAVEGNAGO";
+                logo.src = "https://savegnagoio.vtexassets.com/assets/vtex/assets-builder/savegnagoio.store-theme/14.0.36/home/logo-save___ee8753fa9fd1e21018b817a0d020549f.png";
+            } else {
+                body.classList.remove('theme-savegnago');
+                body.classList.add('theme-paulistao');
+                label.textContent = "PAULISTÃO";
+                logo.src = "https://paulistaoatacadista.vtexassets.com/assets/vtex.file-manager-graphql/images/91d1697e-7efa-471e-b763-68b8b71430b2___db630f93263bf9ecc924c4493e2279f9.png";
+            }
+        }
+
+        // --- LÓGICA DE API KEY ---
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            const key = input.value.trim();
+            
+            if (!key) {
+                alert("Por favor, cole uma chave válida!");
+                input.focus();
+                return;
+            }
+            
+            localStorage.setItem('gemini_api_key', key);
+            API_KEY = key;
+            closeConfigModal();
+            showToast("Chave salva com sucesso!");
+        }
+
+        function openConfigModal() { document.getElementById('configModal').classList.add('open'); }
+        function closeConfigModal() { document.getElementById('configModal').classList.remove('open'); }
+
+        // --- LÓGICA DE LOGIN ---
+        function updateAuthUI() {
+            const btn = document.getElementById('authButton');
+            const container = document.getElementById('userInfoContainer');
+            const nameDisplay = document.getElementById('displayUsername');
+
+            if (CURRENT_USER) {
+                btn.textContent = "Sair";
+                container.classList.remove('hidden');
+                nameDisplay.textContent = CURRENT_USER;
+            } else {
+                btn.textContent = "Entrar";
+                container.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('loginButton').addEventListener('click', () => {
+            const name = document.getElementById('usernameInput').value.trim();
+            if (name) {
+                CURRENT_USER = name;
+                localStorage.setItem('appUser', name);
+                updateAuthUI();
+                toggleModal('loginModal', false);
+                showToast(`Olá, ${name}!`);
+            }
         });
 
-        // --- MOTOR DE IA (GEMINI 2.0) ---
+        function toggleAuth() {
+            if (CURRENT_USER) {
+                if(confirm("Deseja sair?")) {
+                    localStorage.removeItem('appUser');
+                    CURRENT_USER = null;
+                    updateAuthUI();
+                }
+            } else {
+                toggleModal('loginModal', true);
+            }
+        }
+
+        // --- CÉREBRO IA ---
         async function analyzeWithAI() {
-            if(!API_KEY) { alert("Configure a API Key!"); toggleModal('configModal', true); return; }
+            if (!API_KEY) { alert("Configure a API primeiro!"); openConfigModal(); return; }
             
             const text = document.getElementById('inputText').value;
-            if(!text.trim()) { showToast("Cole o texto primeiro!", "error"); return; }
+            if (!text.trim()) { showToast("Cole o texto primeiro!", "error"); return; }
 
-            const btn = document.getElementById('parseButton');
+            const btn = document.getElementById('analyzeBtn');
             const spinner = document.getElementById('loadingSpinner');
-            const btnText = document.getElementById('buttonText');
-            
+            const btnText = btn.querySelector('span');
+
             btn.disabled = true;
-            btnText.textContent = "IA Processando...";
+            btnText.textContent = "IA Pensando...";
             spinner.classList.remove('hidden');
             document.getElementById('resultsContainer').innerHTML = '';
+            document.getElementById('summaryContainer').classList.add('hidden');
 
             const prompt = `
                 Você é um especialista em dados de varejo. Analise este texto de ofertas desestruturado.
@@ -253,7 +294,7 @@
                 3. Identifique regras de atacado ("Levando X") e preços de clube ("Cliente Campeão", "Nosso Cartão").
                 4. Corrija nomes quebrados em várias linhas.
 
-                Retorne APENAS JSON:
+                Retorne APENAS JSON válido:
                 [
                     {
                         "titulo_lista": "Título Identificado (ou Geral)",
@@ -286,15 +327,15 @@
                 if(data.error) throw new Error(data.error.message);
 
                 const aiText = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
-                window.globalParsedBlocks = JSON.parse(aiText);
+                window.parsedData = JSON.parse(aiText);
 
-                renderSummaryTable();
+                renderSummary();
                 renderAllTables();
-                showToast("Análise IA Concluída!");
+                showToast("Análise Concluída!");
 
             } catch (error) {
                 console.error(error);
-                showToast("Erro na IA: " + error.message, "error");
+                showToast("Erro: " + error.message, "error");
             } finally {
                 btn.disabled = false;
                 btnText.textContent = "Analisar com IA";
@@ -302,262 +343,260 @@
             }
         }
 
-        // --- RENDERIZAÇÃO (LAYOUT CLÁSSICO v10/v11) ---
+        // --- RENDERIZAÇÃO ---
+        function renderSummary() {
+            const container = document.getElementById('summaryContainer');
+            container.innerHTML = '';
+            
+            let totalItens = 0;
+            let totalListas = window.parsedData.length;
+
+            window.parsedData.forEach(l => totalItens += l.itens.length);
+
+            // Cards de Resumo
+            container.innerHTML += `
+                <div class="card p-4 border-l-4 border-l-blue-500">
+                    <p class="text-xs font-bold text-gray-400 uppercase">Listas</p>
+                    <p class="text-2xl font-bold text-gray-800">${totalListas}</p>
+                </div>
+                <div class="card p-4 border-l-4 border-l-green-500">
+                    <p class="text-xs font-bold text-gray-400 uppercase">Ofertas</p>
+                    <p class="text-2xl font-bold text-gray-800">${totalItens}</p>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+
         function renderAllTables() {
             const container = document.getElementById('resultsContainer');
             container.innerHTML = '';
 
-            window.globalParsedBlocks.forEach((block, listIndex) => {
+            window.parsedData.forEach((lista, idx) => {
                 const wrapper = document.createElement('div');
-                wrapper.className = 'mb-10 animate-fade-in-up';
+                wrapper.className = "card overflow-hidden animate-fade-in";
 
-                // Cabeçalho da Lista (Estilo v10)
-                let headerHtml = `
-                    <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-4">
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                    ${listIndex === 0 ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Automático</span>' : ''} 
-                                    ${block.titulo_lista}
-                                </h2>
-                            </div>
-                            <div class="flex gap-2">
-                                ${listIndex === 0 ? `<button onclick="reorderAllTables()" class="btn btn-warning py-2 px-3 text-sm"><i class="fa-solid fa-arrow-down-1-9"></i> Reordenar</button>` : ''}
-                                <button onclick="copyTextList(${listIndex})" class="btn btn-copy py-2 px-3 text-sm"><i class="fa-solid fa-clipboard-list"></i> Copiar Lista</button>
-                                <button onclick="exportToExcel(${listIndex})" class="btn btn-excel py-2 px-3 text-sm"><i class="fa-solid fa-file-excel"></i> Excel</button>
-                            </div>
-                        </div>
+                // Cabeçalho da Tabela
+                const header = document.createElement('div');
+                header.className = "bg-gray-50 p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4";
+                header.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+                            ${idx === 0 ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Geral</span>' : `<span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">Lista ${idx}</span>`}
+                            ${lista.titulo_lista}
+                        </h3>
+                    </div>
+                    <div class="flex gap-2">
+                        ${idx === 0 ? `<button onclick="reorderAllTables()" class="btn btn-neutral text-xs px-3 py-1"><i class="fa-solid fa-sort"></i> Reordenar</button>` : ''}
+                        <button onclick="copyList(${idx})" class="btn btn-copy text-xs px-3 py-1"><i class="fa-regular fa-copy"></i> Copiar</button>
+                        <button onclick="exportExcel(${idx})" class="btn btn-excel text-xs px-3 py-1"><i class="fa-solid fa-file-excel"></i> Excel</button>
                     </div>
                 `;
 
-                // Tabela (Estilo v10 - Checkbox, Ordem, Colunas Específicas)
-                const orderHeader = listIndex === 0 ? '<th class="px-4 py-3 text-center w-16 text-xs font-bold text-gray-600 uppercase">Ordem</th>' : '<th class="px-4 py-3 text-center w-10 text-xs font-bold text-gray-600 uppercase">#</th>';
-                const specialHeader = selectedOfferType === 'SAVEGNAGO' ? 'Save Ganhe' : 'Cliente Campeão';
+                // Tabela
+                const tableContainer = document.createElement('div');
+                tableContainer.className = "overflow-x-auto";
+                
+                const specialHeader = SELECTED_COMPANY === 'SAVEGNAGO' ? 'Save Ganhe' : 'Cliente Campeão';
+                const orderHeader = idx === 0 ? 'Ordem' : '#';
 
-                let tableHtml = `
-                    <div class="overflow-x-auto card">
-                        <table class="min-w-full" id="table-${listIndex}">
-                            <thead class="bg-gray-50 sticky-header">
-                                <tr>
-                                    <th class="px-4 py-3 text-center w-10"><i class="fa-solid fa-check"></i></th>
-                                    ${orderHeader}
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Código / Link</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Descrição</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Preço Normal</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Nosso Cartão</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">${specialHeader}</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Info Extra</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                `;
-
-                block.itens.forEach((p, i) => {
-                    // Mapeamento dos campos da IA para as colunas da tabela antiga
-                    const orderCell = listIndex === 0 ? `<input type="number" class="order-input" placeholder="#">` : `<span class="text-gray-400 text-xs">${i + 1}</span>`;
+                let rowsHtml = '';
+                lista.itens.forEach((item, i) => {
+                    const orderInput = idx === 0 ? `<input type="number" class="order-input w-12 text-center border rounded" placeholder="#">` : `<span class="text-gray-400 text-xs">${i+1}</span>`;
                     
-                    // Lógica para separar Preços Especiais (Clube vs Cartão)
+                    // Tratamento de Preços Especiais
                     let cardPrice = "-";
                     let clubPrice = "-";
-                    let cellClassCard = "bg-blue-50 text-blue-900";
-                    let cellClassClub = selectedOfferType === 'SAVEGNAGO' ? "bg-pink-50 text-pink-900" : "bg-red-50 text-red-900";
+                    let rowClassCard = "bg-blue-50 text-blue-800 font-bold";
+                    let rowClassClub = SELECTED_COMPANY === 'SAVEGNAGO' ? "bg-pink-50 text-pink-800 font-bold" : "bg-red-50 text-red-800 font-bold";
 
-                    if (p.preco_clube) {
-                        const clubName = (p.nome_clube || "").toLowerCase();
-                        if (clubName.includes("cartão") || clubName.includes("pagando com")) {
-                            cardPrice = `R$ ${p.preco_clube}`;
+                    if (item.preco_clube) {
+                        const name = (item.nome_clube || "").toLowerCase();
+                        if (name.includes('cartão') || name.includes('pagando')) {
+                            cardPrice = `R$ ${item.preco_clube}`;
                         } else {
-                            clubPrice = `R$ ${p.preco_clube}`;
+                            clubPrice = `R$ ${item.preco_clube}`;
                         }
                     }
 
                     // Links
-                    const linkUrl = selectedOfferType === 'SAVEGNAGO' ? `https://www.savegnago.com.br/${p.codigo}` : `https://www.paulistaoatacadista.com.br/${p.codigo}`;
-                    const linkHtml = p.codigo ? `
-                        <div class="flex flex-col gap-1">
-                            <a href="${linkUrl}" target="_blank" class="sku-link text-center">${p.codigo} <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i></a>
-                            <button onclick="navigator.clipboard.writeText('${p.codigo}')" class="text-gray-400 hover:text-blue-500 text-xs"><i class="fa-regular fa-copy"></i></button>
-                        </div>
-                    ` : '-';
+                    const baseUrl = SELECTED_COMPANY === 'SAVEGNAGO' ? 'https://www.savegnago.com.br/' : 'https://www.paulistaoatacadista.com.br/';
+                    const linkHtml = item.codigo ? `<a href="${baseUrl}${item.codigo}" target="_blank" class="sku-link">${item.codigo} <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i></a>` : '-';
 
-                    tableHtml += `
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-4 py-4 text-center"><input type="checkbox" class="w-5 h-5 text-green-600 rounded cursor-pointer" onchange="this.closest('tr').classList.toggle('row-completed')"></td>
-                            <td class="px-4 py-4 text-center">${orderCell}</td>
-                            <td class="px-4 py-4 whitespace-nowrap">${linkHtml}</td>
-                            <td class="px-4 py-4 text-sm font-medium text-gray-900 cursor-pointer" onclick="navigator.clipboard.writeText('${p.descricao.replace(/'/g,"")}')">${p.descricao}</td>
-                            <td class="px-4 py-4 text-center text-gray-800 font-bold">R$ ${p.preco}</td>
-                            <td class="px-4 py-4 text-center font-bold ${cellClassCard}">${cardPrice}</td>
-                            <td class="px-4 py-4 text-center font-bold ${cellClassClub}">${clubPrice}</td>
-                            <td class="px-4 py-4 text-center text-sm text-purple-700 italic bg-purple-50">${p.regra_atacado || '-'}</td>
+                    rowsHtml += `
+                        <tr class="hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                            <td class="px-4 py-3 text-center"><input type="checkbox" class="accent-green-600 cursor-pointer" onchange="this.closest('tr').classList.toggle('row-completed')"></td>
+                            <td class="px-4 py-3 text-center">${orderInput}</td>
+                            <td class="px-4 py-3 text-center text-xs whitespace-nowrap">${linkHtml}</td>
+                            <td class="px-4 py-3 font-medium text-gray-800 text-sm cursor-pointer hover:text-blue-600" onclick="navigator.clipboard.writeText('${item.descricao.replace(/'/g,"")}')">${item.descricao}</td>
+                            <td class="px-4 py-3 text-center font-bold text-gray-900">R$ ${item.preco}</td>
+                            <td class="px-4 py-3 text-center text-xs ${cardPrice !== '-' ? rowClassCard : ''}">${cardPrice}</td>
+                            <td class="px-4 py-3 text-center text-xs ${clubPrice !== '-' ? rowClassClub : ''}">${clubPrice}</td>
+                            <td class="px-4 py-3 text-center text-xs text-gray-500 italic bg-gray-50">${item.regra_atacado || '-'}</td>
                         </tr>
                     `;
                 });
 
-                tableHtml += `</tbody></table></div>`;
-                wrapper.innerHTML = headerHtml + tableHtml;
+                tableContainer.innerHTML = `
+                    <table class="w-full text-left border-collapse" id="table-${idx}">
+                        <thead class="bg-gray-100 text-xs uppercase text-gray-600">
+                            <tr>
+                                <th class="px-4 py-2 text-center w-8"><i class="fa-solid fa-check"></i></th>
+                                <th class="px-4 py-2 text-center w-16">${orderHeader}</th>
+                                <th class="px-4 py-2 text-center">Cód/Link</th>
+                                <th class="px-4 py-2">Descrição</th>
+                                <th class="px-4 py-2 text-center">Preço</th>
+                                <th class="px-4 py-2 text-center">Cartão</th>
+                                <th class="px-4 py-2 text-center">${specialHeader}</th>
+                                <th class="px-4 py-2 text-center">Atacado/Info</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                `;
+
+                wrapper.appendChild(header);
+                wrapper.appendChild(tableContainer);
                 container.appendChild(wrapper);
             });
         }
 
-        // --- COPY FUNCTION (FORMATO ANTIGO) ---
-        function copyTextList(blockIndex) {
-            const block = window.globalParsedBlocks[blockIndex];
-            // Se tiver inputs de ordem, ordena antes de copiar
-            if(blockIndex === 0) {
-                const rows = Array.from(document.querySelectorAll(`#table-0 tbody tr`));
-                // Lógica de reordenação simplificada para cópia: pega a ordem visual da tela
-                // (Para reordenação real, use a função reorderAllTables)
-            }
-
+        // --- ACTIONS ---
+        function copyList(idx) {
+            const list = window.parsedData[idx];
             let text = "";
-            block.itens.forEach((p, i) => {
-                // Recupera valor da ordem se existir input, senão usa índice
-                let orderVal = i + 1;
-                const row = document.querySelector(`#table-${blockIndex} tbody tr:nth-child(${i+1}) .order-input`);
-                if(row && row.value) orderVal = row.value;
+            list.itens.forEach((p, i) => {
+                // Pega valor da ordem se existir
+                let order = i + 1;
+                const rowInput = document.querySelector(`#table-${idx} tbody tr:nth-child(${i+1}) .order-input`);
+                if (rowInput && rowInput.value) order = rowInput.value;
 
-                text += `${orderVal} - ${p.descricao} – R$ ${p.preco}`;
-                if(p.codigo) text += ` (red.${p.codigo})`;
+                text += `${order} - ${p.descricao} – R$ ${p.preco}`;
+                if (p.codigo) text += ` (red.${p.codigo})`;
 
-                if(p.preco_clube) {
-                    const label = p.nome_clube || "Clube";
-                    // Separa se é cartão ou clube para texto
-                    if(label.toLowerCase().includes("cartão")) text += ` (Nosso Cartão: R$ ${p.preco_clube})`;
-                    else text += ` (${selectedOfferType === 'SAVEGNAGO' ? 'Save Ganhe' : 'Cliente Campeão'}: R$ ${p.preco_clube})`;
+                if (p.preco_clube) {
+                    const label = (p.nome_clube || "Clube").toLowerCase().includes("cartão") ? "Nosso Cartão" : (SELECTED_COMPANY === 'SAVEGNAGO' ? 'Save Ganhe' : 'Cliente Campeão');
+                    text += ` (${label}: R$ ${p.preco_clube})`;
                 }
                 
                 text += "\n";
-                if(p.regra_atacado) text += `(${p.regra_atacado})\n`;
+                if (p.regra_atacado) text += `(${p.regra_atacado})\n`;
             });
-
-            navigator.clipboard.writeText(text).then(() => showToast("Lista copiada!"));
+            navigator.clipboard.writeText(text).then(() => showToast("Copiado!"));
         }
 
-        // --- EXTRAS ---
         function reorderAllTables() {
-            // Lógica de reordenação visual baseada nos inputs da tabela 0
-            // Simplesmente ordena o array globalParsedBlocks[0].itens e re-renderiza
-            const rows = Array.from(document.querySelectorAll('#table-0 tbody tr'));
-            const orderMap = new Map();
-            rows.forEach((row, idx) => {
-                const input = row.querySelector('.order-input');
-                const val = input.value ? parseInt(input.value) : 9999;
-                // Usa o índice original como chave para mapear
-                orderMap.set(idx, val);
+            // Pega inputs da tabela 0 e reordena os dados originais
+            const inputs = document.querySelectorAll('#table-0 .order-input');
+            const map = new Map();
+            inputs.forEach((input, idx) => {
+                const val = input.value ? parseInt(input.value) : 99999;
+                map.set(idx, val);
             });
 
-            // Ordena o bloco 0
-            const block0 = window.globalParsedBlocks[0];
-            // Adiciona índice temporário para mapear
-            const itemsWithIndex = block0.itens.map((item, idx) => ({ item, originalIdx: idx }));
-            itemsWithIndex.sort((a, b) => {
-                const orderA = orderMap.get(a.originalIdx);
-                const orderB = orderMap.get(b.originalIdx);
-                return orderA - orderB;
+            const listaGeral = window.parsedData[0];
+            // Mapeia com índice original para ordenar estavelmente
+            const temp = listaGeral.itens.map((item, i) => ({ item, sortVal: map.get(i), originalIdx: i }));
+            
+            temp.sort((a, b) => {
+                if (a.sortVal !== b.sortVal) return a.sortVal - b.sortVal;
+                return a.originalIdx - b.originalIdx;
             });
-            block0.itens = itemsWithIndex.map(x => x.item);
 
+            listaGeral.itens = temp.map(t => t.item);
             renderAllTables();
-            
-            // Restaura valores nos inputs
-            setTimeout(() => {
-                const newRows = document.querySelectorAll('#table-0 tbody tr');
-                newRows.forEach((row, idx) => {
-                    const input = row.querySelector('.order-input');
-                    // Se foi ordenado, assume sequencial ou o valor que estava?
-                    // Melhor deixar sequencial visualmente ou vazio
-                    // input.value = idx + 1; 
-                });
-            }, 100);
-            
             showToast("Reordenado!");
         }
 
-        function exportToExcel(idx) {
-            const block = window.globalParsedBlocks[idx];
-            const ws = XLSX.utils.json_to_sheet(block.itens);
+        function exportExcel(idx) {
+            const list = window.parsedData[idx];
+            const ws = XLSX.utils.json_to_sheet(list.itens);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Ofertas");
             XLSX.writeFile(wb, `Lista_${idx}.xlsx`);
         }
 
-        function renderSummaryTable() {
-            const container = document.getElementById('summaryContainer');
-            const tbody = document.getElementById('summaryTableBody');
-            const totalEl = document.getElementById('summaryTotalCount');
-            tbody.innerHTML = '';
-            let totalGeneral = 0;
-            if (window.globalParsedBlocks.length === 0) { container.classList.add('hidden'); return; }
-            window.globalParsedBlocks.forEach((block, index) => {
-                const count = block.itens.length; totalGeneral += count;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="px-4 py-2 text-gray-800 border-b">${block.titulo_lista}</td><td class="px-4 py-2 text-center font-bold text-blue-600 border-b">${count}</td>`;
-                tbody.appendChild(tr);
-            });
-            totalEl.textContent = totalGeneral;
-            container.classList.remove('hidden');
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('resultsContainer').innerHTML = '';
+            document.getElementById('summaryContainer').classList.add('hidden');
+            window.parsedData = [];
+            showToast("Limpo!");
         }
 
-        // --- MODAL & API KEY ---
-        function saveApiKey() { 
-            const key = document.getElementById('apiKeyInput').value.trim(); 
-            if(key) { localStorage.setItem('gemini_api_key', key); API_KEY = key; document.getElementById('apiStatus').classList.remove('hidden'); toggleModal('configModal', false); showToast("API Salva!"); } 
-        }
-        function openConfigModal() { toggleModal('configModal', true); }
-        function showToast(msg, type="success") { 
-            const t = document.createElement('div'); t.className = `toast-message ${type}`; 
-            t.innerHTML = `<span>${msg}</span>`; document.getElementById('toast-container').appendChild(t); 
-            setTimeout(() => t.remove(), 3000); 
-        }
-        function toggleModal(id, show) { 
-            const m = document.getElementById(id); 
-            if(show) m.classList.add('visible'); else m.classList.remove('visible'); 
-        }
-
-        // --- TIMER ---
-        let timerInterval, timerStart;
-        document.getElementById('timerButton').addEventListener('click', () => {
-            const btn = document.getElementById('timerButton');
-            const display = document.getElementById('liveTimerContainer');
-            const txt = document.getElementById('liveTimer');
-            if(btn.classList.contains('btn-timer-active')) {
-                clearInterval(timerInterval);
-                btn.classList.remove('btn-timer-active'); btn.classList.add('btn-timer');
-                btn.innerHTML = '<i class="fa-solid fa-stopwatch"></i> Iniciar Timer';
-                display.classList.add('hidden');
-                // Save
-                const end = new Date(); const dur = new Date(end - timerStart).toISOString().substr(11,8);
+        // --- TIMER & HISTORY ---
+        let timerInt, timerStart;
+        const tBtn = document.getElementById('timerButton');
+        const tDisplay = document.getElementById('liveTimer');
+        
+        tBtn.addEventListener('click', () => {
+            if (tBtn.classList.contains('btn-brand')) {
+                // Stop
+                clearInterval(timerInt);
+                tBtn.classList.remove('btn-brand');
+                tBtn.classList.add('btn-neutral');
+                tBtn.innerHTML = '<i class="fa-solid fa-stopwatch"></i> Cronômetro <span id="liveTimer" class="ml-2 font-mono hidden">00:00:00</span>';
+                
+                const end = new Date();
+                const dur = new Date(end - timerStart).toISOString().substr(11, 8);
                 const demand = document.getElementById('demandInput').value || "Sem Título";
+                const user = CURRENT_USER || "Visitante";
+                
                 const hist = JSON.parse(localStorage.getItem('appHistory') || '[]');
-                hist.unshift({user: currentUser||'Visitante', demand: demand, company: selectedOfferType||'?', date: new Date().toLocaleDateString(), start: timerStart.toLocaleTimeString(), end: end.toLocaleTimeString(), duration: dur});
+                hist.unshift({date: new Date().toLocaleDateString(), company: SELECTED_COMPANY, demand, user, start: timerStart.toLocaleTimeString(), end: end.toLocaleTimeString(), duration: dur});
                 localStorage.setItem('appHistory', JSON.stringify(hist));
-                openHistory();
+                showToast("Tempo Salvo no Histórico!");
             } else {
+                // Start
                 timerStart = new Date();
-                btn.classList.add('btn-timer-active'); btn.classList.remove('btn-timer');
-                btn.innerHTML = '<i class="fa-solid fa-stop"></i> Parar';
-                display.classList.remove('hidden');
-                timerInterval = setInterval(() => {
-                    const d = new Date(new Date() - timerStart);
-                    txt.innerText = d.toISOString().substr(11,8);
+                tBtn.classList.remove('btn-neutral');
+                tBtn.classList.add('btn-brand');
+                tBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Parar <span id="liveTimer" class="ml-2 font-mono">00:00:00</span>';
+                const span = tBtn.querySelector('#liveTimer');
+                
+                timerInt = setInterval(() => {
+                    const diff = new Date(new Date() - timerStart);
+                    span.innerText = diff.toISOString().substr(11, 8);
                 }, 1000);
             }
         });
-        
+
         function openHistory() {
-            // Reutilizando lógica de histórico das versões anteriores para preencher a tabela
-            const history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+            const hist = JSON.parse(localStorage.getItem('appHistory') || '[]');
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
-            history.forEach(row => {
-               const tr = document.createElement('tr');
-               tr.innerHTML = `<td class="px-4 py-2 text-center text-sm">${row.date}</td><td class="px-4 py-2 text-center text-sm font-bold">${row.company}</td><td class="px-4 py-2 text-sm">${row.demand}</td><td class="px-4 py-2 text-center text-sm">${row.user}</td><td class="px-4 py-2 text-center text-sm">${row.duration}</td>`;
-               tbody.appendChild(tr);
-            });
+            
+            if(hist.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nada aqui ainda.</td></tr>';
+            } else {
+                hist.forEach(h => {
+                    const badge = h.company === 'SAVEGNAGO' ? '<span class="badge badge-blue">SAVEGNAGO</span>' : '<span class="badge badge-red">PAULISTÃO</span>';
+                    tbody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3 text-center text-xs">${h.date}</td>
+                            <td class="p-3 text-center">${badge}</td>
+                            <td class="p-3 text-sm font-bold">${h.demand}</td>
+                            <td class="p-3 text-center text-xs">${h.user}</td>
+                            <td class="p-3 text-center text-xs font-mono text-blue-600">${h.duration}</td>
+                        </tr>
+                    `;
+                });
+            }
             toggleModal('historyModal', true);
         }
-        function clearHistory() { if(confirm("Limpar histórico?")) { localStorage.removeItem('appHistory'); openHistory(); } }
+        function clearHistory() { if(confirm("Apagar?")) { localStorage.removeItem('appHistory'); openHistory(); } }
+        
+        // --- UTILS ---
+        function showToast(msg, type="success") {
+            const t = document.createElement('div'); t.className = `toast-message ${type}`; t.innerHTML = msg;
+            document.getElementById('toast-container').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+        function toggleModal(id, show) {
+            const m = document.getElementById(id);
+            if(show) m.classList.add('open'); else m.classList.remove('open');
+        }
     </script>
 </body>
 </html>
