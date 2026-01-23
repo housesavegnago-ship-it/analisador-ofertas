@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisador v13.7 - Final Release</title>
+    <title>Analisador v13.8 - Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -70,7 +70,7 @@
                     <i class="fa-solid fa-brain text-2xl" style="color: var(--brand);"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold text-gray-900 leading-none">Analisador v13.7</h1>
+                    <h1 class="text-xl font-extrabold text-gray-900 leading-none">Analisador v13.8</h1>
                     <p class="text-xs text-gray-500 font-medium">Auto-Correção + Diff View</p>
                 </div>
             </div>
@@ -137,7 +137,7 @@
 
     <footer class="text-center py-8 text-gray-400 text-xs">
         <p>Desenvolvido para Savegnago & Paulistão</p>
-        <p>v13.7 - IA + AutoCorreção + Diff Logic</p>
+        <p>v13.8 - IA + AutoCorreção + Diff Logic</p>
     </footer>
 
     <div id="loginModal" class="modal">
@@ -173,7 +173,7 @@
 
     <script>
         // CONFIGURAÇÕES & DADOS
-        const API_KEY = "AIzaSyBWiycPM19I4WCSqbksuM7Sy_hAshKFjZc";
+        const API_KEY = "AIzaSyCeJw5vKrJz1Ip2IDvX2R0_V_V4jVXNyyM";
         const MODEL = "gemini-2.0-flash";
         
         const CITIES_SAVEGNAGO = ["Americana", "Araraquara", "Araras", "Barretos", "Bebedouro", "Campinas", "Franca", "Hortolândia", "Indaiatuba", "Jaboticabal", "Jardinópolis", "Leme", "Limeira", "Matão", "Monte Alto", "Piracicaba", "Ribeirão Preto", "Rio Claro", "São Carlos", "Sertãozinho", "Sumaré"];
@@ -187,7 +187,7 @@
             "pêra": "Pera",
             "1l": "1L", "2l": "2L", "3l": "3L", "5l": "5L", "10l": "10L",
             "1,3l": "1,3L", "1,5l": "1,5L", "1.5l": "1,5L",
-            "1,5": "1,5", // Garante número limpo? Depende do contexto, cuidado.
+            "1,5": "1,5", 
             "tub": "Tubo", "tubo": "Tubo",
             "mms": "M&Ms", "m&m": "M&Ms",
             "kilo": "kg",
@@ -236,14 +236,10 @@
         function applyCorrections(text) {
             if(!text) return text;
             let corrected = text;
-            // Ordena chaves por tamanho (maior primeiro) para evitar substituir substrings erradas (ex: 1,5 vs 1,5l)
             const keys = Object.keys(CORRECTIONS).sort((a,b) => b.length - a.length);
             
             keys.forEach(key => {
-                // Regex com boundary (\b) para palavras inteiras, case insensitive
-                // Tratamento especial para números/unidades
                 const regex = new RegExp(`\\b${key.replace('.','\\.')}\\b`, 'gi'); 
-                // Se for unidade colada (ex: 1l), o \b pode falhar no fim. Ajuste simples:
                 if (key.match(/\d/)) {
                      corrected = corrected.replace(new RegExp(key, 'gi'), CORRECTIONS[key]);
                 } else {
@@ -285,9 +281,8 @@
                 });
                 const data = await response.json();
                 
-                // Tratamento de Erro do Google
                 if(data.error) throw new Error(data.error.message);
-                if(!data.candidates || !data.candidates[0].content) throw new Error("A IA não retornou nada. Tente novamente.");
+                if(!data.candidates || !data.candidates[0].content) throw new Error("Sem resposta da IA. Verifique a chave.");
 
                 const jsonStr = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
                 let rawData = JSON.parse(jsonStr);
@@ -300,7 +295,7 @@
                     });
                 });
 
-                // 2. Processa Lógica de Cidades (Exclusão)
+                // 2. Processa Lógica de Cidades
                 processCitiesLogic(rawData);
 
                 window.parsedData = rawData;
@@ -319,15 +314,12 @@
         function processCitiesLogic(data) {
             let specificCities = [];
             
-            // Passo 1: Identificar cidades nas listas específicas (índice 1 em diante)
             for (let i = 1; i < data.length; i++) {
                 const header = (data[i].header || "").toUpperCase();
                 data[i].cityList = [];
                 MASTER_CITIES.forEach(city => {
-                    // Normalização nuclear para comparação (remove acentos)
                     const normHeader = header.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     const normCity = city.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-                    
                     if (normHeader.includes(normCity)) {
                         data[i].cityList.push(city);
                         specificCities.push(city);
@@ -335,12 +327,8 @@
                 });
             }
 
-            // Passo 2: Lista Geral (índice 0) fica com o RESTO
             if (data.length > 0) {
                 data[0].cityList = MASTER_CITIES.filter(c => !specificCities.includes(c));
-                // Se a lista 0 tiver um cabeçalho específico detectado pela IA que contenha cidades, respeitamos a IA? 
-                // A regra do usuário é: "Primeira sem nome = todas da rede [menos as outras]". 
-                // Então forçamos essa lógica de subtração.
                 if(!data[0].header || data[0].header.toUpperCase().includes("GERAL") || data[0].header.toUpperCase().includes("VALIDAS")) {
                      data[0].header = "LISTA GERAL (REDE)";
                 }
@@ -364,13 +352,12 @@
             const container = document.getElementById('resultsArea');
             container.innerHTML = '';
 
-            const listaGeral = window.parsedData[0]; // Referência para comparação
+            const listaGeral = window.parsedData[0]; 
 
             window.parsedData.forEach((lista, idx) => {
                 const wrapper = document.createElement('div');
                 wrapper.className = "card mb-8 overflow-hidden animate-[fadeIn_0.5s_ease]";
 
-                // Título
                 const citiesText = lista.cityList && lista.cityList.length > 0 ? lista.cityList.join(', ') : "Nenhuma cidade identificada";
                 
                 const header = `
@@ -393,34 +380,26 @@
                 // Tabela
                 let rows = '';
                 const specialHeader = CURRENT_COMPANY === 'SAVEGNAGO' ? 'Save Ganhe' : 'Cliente Campeão';
-                
-                // Variável para controlar se houve itens visíveis
                 let visibleItems = 0;
 
                 lista.itens.forEach((item, i) => {
-                    // LÓGICA DE DIFF (Comparação com Lista Geral)
                     let showRow = true;
                     let descDisplay = item.desc;
                     let priceDisplay = `R$ ${item.preco}`;
                     let rowClass = "";
 
+                    // DIFF LOGIC
                     if (idx > 0 && listaGeral) {
-                        // Tenta encontrar o item na lista geral (pelo código ou descrição)
                         const refItem = listaGeral.itens.find(r => (item.cod && r.cod === item.cod) || r.desc === item.desc);
                         
                         if (refItem) {
-                            // Item existe na geral. Verificamos se mudou algo.
-                            const priceChanged = item.preco !== refItem.preco;
-                            // Se é IDENTICO, ESCONDE (Requisito: "apenas mostra o que mudou")
-                            if (!priceChanged) {
+                            if (item.preco === refItem.preco && item.clube === refItem.clube) {
                                 showRow = false; 
                             } else {
-                                // Se mudou preço, mostra riscado
-                                priceDisplay = `<span class="diff-changed">R$ ${item.preco}</span><span class="diff-old">Era: ${refItem.preco}</span>`;
-                                rowClass = "bg-yellow-50"; // Destaque visual leve
+                                priceDisplay = `<span class="diff-changed">R$ ${item.preco}</span><div class="diff-old">Era: ${refItem.preco}</div>`;
+                                rowClass = "bg-yellow-50"; 
                             }
                         } else {
-                            // Item NÃO existe na geral = NOVO (Mantém visível)
                             descDisplay = `<span class="diff-new">${item.desc}</span> <span class="bg-green-100 text-green-800 text-[10px] px-1 rounded">NOVO</span>`;
                             rowClass = "bg-green-50";
                         }
@@ -487,30 +466,35 @@
             let text = "";
             const rows = document.querySelectorAll(`#table-${idx} tbody tr`);
             
-            // Se for lista de Diff (idx > 0) e não tiver linhas visíveis, avisa
             if (idx > 0 && rows.length === 1 && rows[0].innerText.includes("Nenhuma alteração")) {
-                alert("Nada para copiar (lista idêntica à geral).");
+                alert("Nada para copiar (lista idêntica).");
                 return;
             }
 
             list.itens.forEach((item, i) => {
-                // Se estivermos numa lista diff, precisamos verificar se o item foi renderizado (não foi filtrado)
-                // A maneira mais segura é verificar se a IA marcou como diff, mas aqui vamos simplificar:
-                // Copia TUDO o que é valido para essa região (comportamento padrão de Copy List).
-                
-                let order = i + 1;
-                // Tenta pegar ordem visual se existir input
-                const rowInput = document.querySelector(`#table-${idx} tbody tr:nth-child(${i+1}) .order-input`);
-                if(rowInput && rowInput.value) order = rowInput.value;
-
-                text += `${order} - ${item.desc} – R$ ${item.preco}`;
-                if(item.cod) text += ` (red.${item.cod})`;
-                if(item.clube) {
-                    const label = (item.nome_clube || "").toLowerCase().includes("cartão") ? "Nosso Cartão" : (CURRENT_COMPANY === 'SAVEGNAGO' ? 'Save Ganhe' : 'Cliente Campeão');
-                    text += ` (${label}: R$ ${item.clube})`;
+                // Filtra se a linha está visível (para listas de Diff)
+                // Se idx > 0, só copia se o item não for idêntico ao da geral
+                const listaGeral = window.parsedData[0];
+                let shouldCopy = true;
+                if(idx > 0 && listaGeral) {
+                    const refItem = listaGeral.itens.find(r => (item.cod && r.cod === item.cod) || r.desc === item.desc);
+                    if(refItem && item.preco === refItem.preco && item.clube === refItem.clube) shouldCopy = false;
                 }
-                text += "\n";
-                if(item.atacado) text += `(${item.atacado})\n`;
+
+                if(shouldCopy) {
+                    let order = i + 1;
+                    const rowInput = document.querySelector(`#table-${idx} tbody tr:nth-child(${i+1}) .order-input`);
+                    if(rowInput && rowInput.value) order = rowInput.value;
+
+                    text += `${order} - ${item.desc} – R$ ${item.preco}`;
+                    if(item.cod) text += ` (red.${item.cod})`;
+                    if(item.clube) {
+                        const label = (item.nome_clube || "").toLowerCase().includes("cartão") ? "Nosso Cartão" : (CURRENT_COMPANY === 'SAVEGNAGO' ? 'Save Ganhe' : 'Cliente Campeão');
+                        text += ` (${label}: R$ ${item.clube})`;
+                    }
+                    text += "\n";
+                    if(item.atacado) text += `(${item.atacado})\n`;
+                }
             });
             navigator.clipboard.writeText(text).then(() => showToast("Copiado!"));
         }
